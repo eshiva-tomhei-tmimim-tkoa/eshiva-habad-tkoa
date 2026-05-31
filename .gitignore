@@ -1,0 +1,34 @@
+# Прототип (источник правды по контенту/дизайну) — хранится локально, не в git
+*.zip
+prototype/
+
+# Node / pnpm
+node_modules/
+.pnpm-store/
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Логи
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# Окружение и секреты
+.env
+.env.*
+!.env.example
+
+# Загрузки пользователя (фото и т.п.)
+uploads/
+
+# ОС / редакторы
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
