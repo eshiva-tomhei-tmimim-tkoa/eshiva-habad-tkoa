@@ -4,7 +4,8 @@ services:
     container_name: yeshiva-mysql
     restart: unless-stopped
     ports:
-      - "3306:3306"
+      # Хост-порт 3307, чтобы не конфликтовать с локально установленным MySQL (3306).
+      - "3307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-yeshiva_tkoa}

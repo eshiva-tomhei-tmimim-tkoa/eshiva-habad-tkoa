@@ -1,0 +1,248 @@
+// Схема БД Ешивы «ХаБаД Ткоа» — MySQL.
+// Соответствует ARCHITECTURE.md §2. Мультиязычные тексты — JSON { ru, he, en }.
+// Все таблицы InnoDB/utf8mb4 (задаётся на уровне БД, см. docker-compose).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum DailyCategory {
+  prayer
+  study
+  meal
+  spirit
+  personal
+}
+
+enum UserRole {
+  admin
+  editor
+}
+
+/// Должности (справочник): Рош Ешива, Шлиах, Мадрих…
+model Position {
+  id        BigInt   @id @default(autoincrement())
+  title     Json // Localized
+  sortOrder Int      @default(0) @map("sort_order")
+  people    Person[]
+
+  @@map("positions")
+}
+
+/// Люди / команда. Должность обязательна, предметы — через person_subjects.
+model Person {
+  id          BigInt   @id @default(autoincrement())
+  name        Json // Localized
+  positionId  BigInt   @map("position_id")
+  bio         Json // Localized
+  photoUrl    String?  @map("photo_url") @db.VarChar(512)
+  sortOrder   Int      @default(0) @map("sort_order")
+  isPublished Boolean  @default(true) @map("is_published")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  position       Position        @relation(fields: [positionId], references: [id], onDelete: Restrict)
+  subjects       PersonSubject[]
+  ledSubjects    Subject[]       @relation("SubjectLead")
+  students       Student[]       @relation("StudentTeacher")
+  scheduleSlots  ScheduleSlot[]
+
+  @@index([positionId])
+  @@index([isPublished])
+  @@index([sortOrder])
+  @@map("people")
+}
+
+/// Предметы Торы (бывш. CURRICULUM): Талмуд, Алоха, Хасидут, Сихот Ребе, Смиха.
+model Subject {
+  id           BigInt   @id @default(autoincrement())
+  code         String   @db.VarChar(8)
+  title        Json // Localized
+  hours        String   @db.VarChar(32)
+  color        String   @db.VarChar(32)
+  items        Json // Localized[]
+  leadPersonId BigInt?  @map("lead_person_id")
+  sortOrder    Int      @default(0) @map("sort_order")
+  isPublished  Boolean  @default(true) @map("is_published")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  leadPerson    Person?         @relation("SubjectLead", fields: [leadPersonId], references: [id], onDelete: SetNull)
+  people        PersonSubject[]
+  scheduleSlots ScheduleSlot[]
+
+  @@index([leadPersonId])
+  @@index([isPublished])
+  @@index([sortOrder])
+  @@map("subjects")
+}
+
+/// Связь человек ↔ предмет (M:N). Заменяет teachers.tags.
+model PersonSubject {
+  personId  BigInt @map("person_id")
+  subjectId BigInt @map("subject_id")
+
+  person  Person  @relation(fields: [personId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@id([personId, subjectId])
+  @@index([subjectId])
+  @@map("person_subjects")
+}
+
+/// Истории учеников.
+model Student {
+  id          BigInt   @id @default(autoincrement())
+  name        Json // Localized
+  quote       Json // Localized
+  teacherId   BigInt?  @map("teacher_id")
+  story       Json // Localized
+  duration    String   @db.VarChar(32)
+  photoUrl    String?  @map("photo_url") @db.VarChar(512)
+  sortOrder   Int      @default(0) @map("sort_order")
+  isPublished Boolean  @default(true) @map("is_published")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  teacher Person?         @relation("StudentTeacher", fields: [teacherId], references: [id], onDelete: SetNull)
+  courses StudentCourse[]
+
+  @@index([teacherId])
+  @@index([isPublished])
+  @@index([sortOrder])
+  @@map("students")
+}
+
+/// Профессиональные курсы (не предметы Торы).
+model Course {
+  id          BigInt   @id @default(autoincrement())
+  title       Json // Localized
+  description Json? // Localized
+  provider    String?  @db.VarChar(128)
+  isPublished Boolean  @default(true) @map("is_published")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  students StudentCourse[]
+
+  @@index([isPublished])
+  @@map("courses")
+}
+
+/// Связь ученик ↔ курс (M:N). Заменяет свободный students.profession.
+model StudentCourse {
+  studentId BigInt @map("student_id")
+  courseId  BigInt @map("course_id")
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@id([studentId, courseId])
+  @@index([courseId])
+  @@map("student_courses")
+}
+
+/// Распорядок дня.
+model DailyBlock {
+  id          BigInt        @id @default(autoincrement())
+  time        DateTime      @db.Time(0)
+  title       Json // Localized
+  category    DailyCategory
+  description Json // Localized
+  sortOrder   Int           @default(0) @map("sort_order")
+
+  @@index([sortOrder])
+  @@map("daily_blocks")
+}
+
+/// Расписание занятий. days — JSON-массив номеров дней (0=Вс … 6=Сб).
+model ScheduleSlot {
+  id        BigInt   @id @default(autoincrement())
+  subjectId BigInt   @map("subject_id")
+  personId  BigInt   @map("person_id")
+  days      Json // number[]
+  startTime DateTime @map("start_time") @db.Time(0)
+  endTime   DateTime @map("end_time") @db.Time(0)
+
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  person  Person  @relation(fields: [personId], references: [id], onDelete: Restrict)
+
+  @@index([subjectId])
+  @@index([personId])
+  @@map("schedule_slots")
+}
+
+/// Кампания пожертвований. is_active помечает текущую.
+model Campaign {
+  id           BigInt   @id @default(autoincrement())
+  title        Json // Localized
+  goalAmount   Decimal  @map("goal_amount") @db.Decimal(12, 2)
+  raisedAmount Decimal  @default(0) @map("raised_amount") @db.Decimal(12, 2)
+  currency     String   @default("ILS") @db.VarChar(8)
+  endsAt       DateTime? @map("ends_at")
+  isActive     Boolean  @default(false) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  donors Donor[]
+
+  @@index([isActive])
+  @@map("campaign")
+}
+
+/// Доноры — принадлежат кампании.
+model Donor {
+  id          BigInt   @id @default(autoincrement())
+  campaignId  BigInt   @map("campaign_id")
+  name        String   @db.VarChar(128)
+  amount      Decimal  @db.Decimal(12, 2)
+  donatedAt   DateTime @map("donated_at")
+  isAnonymous Boolean  @default(false) @map("is_anonymous")
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@map("donors")
+}
+
+/// Заявки с формы контактов.
+model ContactMessage {
+  id        BigInt   @id @default(autoincrement())
+  name      String   @db.VarChar(128)
+  email     String   @db.VarChar(255)
+  phone     String?  @db.VarChar(32)
+  message   String   @db.Text
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([isRead])
+  @@map("contact_messages")
+}
+
+/// Произвольные редактируемые тексты страниц.
+model SiteContent {
+  id         BigInt @id @default(autoincrement())
+  contentKey String @unique @map("content_key") @db.VarChar(128)
+  value      Json // Localized
+  pageGroup  String @map("page_group") @db.VarChar(64)
+
+  @@index([pageGroup])
+  @@map("site_content")
+}
+
+/// Пользователи админки.
+model User {
+  id           BigInt    @id @default(autoincrement())
+  email        String    @unique @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  role         UserRole  @default(editor)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  lastLoginAt  DateTime? @map("last_login_at")
+
+  @@map("users")
+}
