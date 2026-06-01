@@ -11,6 +11,9 @@ build/
 out/
 *.tsbuildinfo
 
+# Turborepo
+.turbo/
+
 # Логи
 npm-debug.log*
 pnpm-debug.log*
