@@ -96,3 +96,64 @@ export const scheduleSlotInputSchema = z.object({
   endTime: timeStringSchema,
 });
 export type ScheduleSlotInput = z.infer<typeof scheduleSlotInputSchema>;
+
+export const positionInputSchema = z.object({
+  title: localizedSchema,
+  sortOrder: z.number().int().default(0),
+});
+export type PositionInput = z.infer<typeof positionInputSchema>;
+
+export const courseInputSchema = z.object({
+  title: localizedSchema,
+  description: localizedSchema.nullable().optional(),
+  provider: z.string().max(128).nullable().optional(),
+  isPublished: z.boolean().default(true),
+});
+export type CourseInput = z.infer<typeof courseInputSchema>;
+
+export const dailyBlockInputSchema = z.object({
+  time: timeStringSchema,
+  title: localizedSchema,
+  category: dailyCategorySchema,
+  description: localizedSchema,
+  sortOrder: z.number().int().default(0),
+});
+export type DailyBlockInput = z.infer<typeof dailyBlockInputSchema>;
+
+export const siteContentInputSchema = z.object({
+  contentKey: z.string().min(1).max(128),
+  value: localizedSchema,
+  pageGroup: z.string().min(1).max(64),
+});
+export type SiteContentInput = z.infer<typeof siteContentInputSchema>;
+
+export const donorInputSchema = z.object({
+  campaignId: z.number().int().positive(),
+  name: z.string().min(1).max(128),
+  amount: z.number().positive(),
+  donatedAt: z.string().datetime().or(z.string().date()),
+  isAnonymous: z.boolean().default(false),
+});
+export type DonorInput = z.infer<typeof donorInputSchema>;
+
+export const campaignInputSchema = z.object({
+  title: localizedSchema,
+  goalAmount: z.number().nonnegative(),
+  raisedAmount: z.number().nonnegative().optional(),
+  currency: z.string().max(8).default('ILS'),
+  endsAt: z.string().datetime().nullable().optional(),
+  isActive: z.boolean().default(false),
+});
+export type CampaignInput = z.infer<typeof campaignInputSchema>;
+
+/** PATCH /:entity/reorder — массовая смена sort_order. */
+export const reorderSchema = z.object({
+  items: z.array(z.object({ id: z.number().int().positive(), sortOrder: z.number().int() })).min(1),
+});
+export type ReorderInput = z.infer<typeof reorderSchema>;
+
+/** PUT /team/:id/subjects и /students/:id/courses — набор id для M:N. */
+export const idSetSchema = z.object({
+  ids: z.array(z.number().int().positive()).default([]),
+});
+export type IdSetInput = z.infer<typeof idSetSchema>;

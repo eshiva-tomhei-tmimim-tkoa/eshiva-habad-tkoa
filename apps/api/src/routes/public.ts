@@ -3,6 +3,7 @@ import { contactInputSchema, donationInputSchema } from '@yeshiva/types';
 import { prisma } from '../db.js';
 import { sendData, sendError, asyncHandler } from '../lib/respond.js';
 import { num, dec, loc, locArray, dayArray, timeHHMM } from '../lib/serialize.js';
+import { flattenZod } from '../lib/validate.js';
 
 export const publicRouter: Router = Router();
 
@@ -224,7 +225,7 @@ publicRouter.post(
   asyncHandler(async (req, res) => {
     const parsed = contactInputSchema.safeParse(req.body);
     if (!parsed.success) {
-      sendError(res, 422, 'VALIDATION', 'Проверьте поля формы', flatten(parsed.error));
+      sendError(res, 422, 'VALIDATION', 'Проверьте поля формы', flattenZod(parsed.error));
       return;
     }
     const msg = await prisma.contactMessage.create({ data: parsed.data });
@@ -238,7 +239,7 @@ publicRouter.post(
   asyncHandler(async (req, res) => {
     const parsed = donationInputSchema.safeParse(req.body);
     if (!parsed.success) {
-      sendError(res, 422, 'VALIDATION', 'Проверьте параметры пожертвования', flatten(parsed.error));
+      sendError(res, 422, 'VALIDATION', 'Проверьте параметры пожертвования', flattenZod(parsed.error));
       return;
     }
     const campaign = await prisma.campaign.findUnique({
@@ -258,13 +259,3 @@ publicRouter.post(
   }),
 );
 
-/** Плоская карта ошибок валидации: поле → первое сообщение. */
-type IssueLike = { path: (string | number)[]; message: string };
-function flatten(error: { issues: IssueLike[] }): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const issue of error.issues) {
-    const key = issue.path.join('.') || '_';
-    if (!(key in out)) out[key] = issue.message;
-  }
-  return out;
-}

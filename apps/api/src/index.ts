@@ -1,9 +1,13 @@
 import 'dotenv/config';
+import path from 'node:path';
 import express from 'express';
 import type { ErrorRequestHandler } from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import type { ApiSuccess } from '@yeshiva/types';
 import { publicRouter } from './routes/public.js';
+import { authRouter } from './routes/auth.js';
+import { adminRouter } from './routes/admin.js';
 import { sendError } from './lib/respond.js';
 
 const app = express();
@@ -11,9 +15,14 @@ const port = Number(process.env.API_PORT ?? 4000);
 const corsOrigins = (process.env.CORS_ORIGINS ?? 'http://localhost:3000,http://localhost:3001')
   .split(',')
   .map((o) => o.trim());
+const uploadDir = path.resolve(process.env.UPLOAD_DIR ?? './uploads');
 
 app.use(cors({ origin: corsOrigins, credentials: true }));
 app.use(express.json());
+app.use(cookieParser());
+
+// Загруженные фото (этап 3: admin upload).
+app.use('/uploads', express.static(uploadDir));
 
 // Health-check.
 app.get('/api/health', (_req, res) => {
@@ -23,7 +32,11 @@ app.get('/api/health', (_req, res) => {
   res.json(payload);
 });
 
-// Публичные роуты (чтение для сайта + формы). Admin CRUD — этап 3.
+// Авторизация админки.
+app.use('/api/admin/auth', authRouter);
+// Защищённый CRUD админки.
+app.use('/api/admin', adminRouter);
+// Публичные роуты (чтение для сайта + формы).
 app.use('/api', publicRouter);
 
 // 404 для неизвестных /api/*.
