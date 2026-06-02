@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   Палитра electric (CONTEXT §6). light — по умолчанию, dark — по data-theme.
+   Прочие палитры прототипа удалены.
+   ============================================================ */
+:root,
+[data-theme='light'] {
+  --bg: #fafbff;
+  --bg-elev: #ffffff;
+  --bg-elev-2: #f0f3ff;
+  --border: #dde3f5;
+  --border-soft: #e7ecf8;
+  --text: #0a0e1f;
+  --text-soft: #2e3656;
+  --text-dim: #6a7396;
+  --primary: #2547d6;
+  --primary-soft: #d9e0fa;
+  --primary-bright: #4263e8;
+  --accent: #b88419;
+  --accent-soft: #fbecc0;
+  --success: #1f8a4c;
+}
+
+[data-theme='dark'] {
+  --bg: #0a0e1f;
+  --bg-elev: #121831;
+  --bg-elev-2: #1a2143;
+  --border: #1f2a4a;
+  --border-soft: #182142;
+  --text: #f0f3ff;
+  --text-soft: #b9c1de;
+  --text-dim: #6a7396;
+  --primary: #5b7dff;
+  --primary-soft: #2b3a7a;
+  --primary-bright: #7a96ff;
+  --accent: #f5c451;
+  --accent-soft: #6b5824;
+  --success: #4ade80;
+}
+
+/* Шрифты: Manrope (RU/EN) по умолчанию; Alef для иврита (через :lang/RTL). */
+:root {
+  --font-display: var(--font-manrope), system-ui, sans-serif;
+  --font-body: var(--font-manrope), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+}
+:lang(he),
+[dir='rtl'] {
+  --font-display: var(--font-alef), var(--font-manrope), sans-serif;
+  --font-body: var(--font-alef), var(--font-manrope), sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    transition:
+      background-color 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+      color 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 1.15;
+  }
+}
+
+@layer components {
+  .container-x {
+    width: min(100% - 48px, 1280px);
+    margin-inline: auto;
+  }
+  .container-narrow {
+    width: min(100% - 48px, 960px);
+    margin-inline: auto;
+  }
+  .mono {
+    font-family: var(--font-mono);
+    letter-spacing: 0.02em;
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--primary);
+  }
+  .card {
+    background-color: var(--bg-elev);
+    border: 1px solid var(--border-soft);
+    border-radius: 16px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: transform 0.2s, background-color 0.2s, border-color 0.2s, color 0.2s;
+  }
+  .btn:hover {
+    transform: translateY(-2px);
+  }
+  .btn-primary {
+    background-color: var(--primary);
+    color: #fff;
+  }
+  .btn-secondary {
+    background-color: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost {
+    background-color: transparent;
+    color: var(--primary);
+  }
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--primary);
+    background-color: var(--primary-soft);
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+}
