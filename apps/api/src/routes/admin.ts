@@ -23,11 +23,23 @@ import { sendData, sendError, asyncHandler } from '../lib/respond.js';
 import { requireAuth, requireRole } from '../lib/auth.js';
 import { flattenZod } from '../lib/validate.js';
 import { num, dec, loc, locArray, dayArray, timeHHMM } from '../lib/serialize.js';
+import { triggerRevalidate } from '../lib/revalidate.js';
 
 export const adminRouter: Router = Router();
 
 // Все админские роуты — только под авторизацией.
 adminRouter.use(requireAuth);
+
+// После успешной мутации (POST/PUT/PATCH/DELETE) дёргаем ISR-ревалидацию сайта.
+const MUTATING = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+adminRouter.use((req, res, next) => {
+  if (MUTATING.has(req.method)) {
+    res.on('finish', () => {
+      if (res.statusCode < 400) void triggerRevalidate();
+    });
+  }
+  next();
+});
 
 // GET /api/admin/me — текущий пользователь (ARCHITECTURE §3.2).
 adminRouter.get(

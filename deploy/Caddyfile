@@ -1,0 +1,17 @@
+# Reverse-proxy с автоматическим TLS (Let's Encrypt).
+# Домены берутся из переменных окружения (см. .env.prod).
+
+{$WEB_DOMAIN} {
+	encode gzip zstd
+	reverse_proxy web:3000
+}
+
+{$ADMIN_DOMAIN} {
+	encode gzip zstd
+	reverse_proxy admin:3001
+}
+
+{$API_DOMAIN} {
+	encode gzip zstd
+	reverse_proxy api:4000
+}

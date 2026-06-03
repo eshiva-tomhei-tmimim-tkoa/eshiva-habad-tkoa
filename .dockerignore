@@ -1,0 +1,14 @@
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+.git
+.github
+prototype
+*.zip
+**/uploads
+**/.env
+**/.env.*
+!**/.env.example
+screenshots
+*.md
