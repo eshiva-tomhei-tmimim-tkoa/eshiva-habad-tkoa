@@ -9,9 +9,19 @@ WORKDIR /app
 
 # Установка зависимостей всего workspace (попадёт в node_modules-тома).
 # Кэш-маунт стора pnpm — переживает повторные сборки и снижает нагрузку на сеть.
-COPY . .
+# Сначала копируем только manifest-файлы, чтобы правки исходников не сбрасывали
+# Docker-слой с pnpm install.
+RUN mkdir -p apps/api apps/web apps/admin packages/types packages/config
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY apps/api/package.json ./apps/api/package.json
+COPY apps/web/package.json ./apps/web/package.json
+COPY apps/admin/package.json ./apps/admin/package.json
+COPY packages/types/package.json ./packages/types/package.json
+COPY packages/config/package.json ./packages/config/package.json
 RUN pnpm config set store-dir /pnpm-store
 RUN --mount=type=cache,target=/pnpm-store pnpm install --frozen-lockfile
+
+COPY . .
 # Сгенерировать Prisma-клиент и собрать общий пакет типов.
 RUN pnpm --filter @yeshiva/api exec prisma generate
 RUN pnpm --filter @yeshiva/types build
