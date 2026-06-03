@@ -41,6 +41,21 @@ export const donationInputSchema = z.object({
 });
 export type DonationInput = z.infer<typeof donationInputSchema>;
 
+/**
+ * POST /api/donations/confirm — учёт завершённого пожертвования после возврата
+ * с формы IsraelGives. externalId (donid) обеспечивает идемпотентность.
+ * showInList: донор решает, показывать ли его в публичном списке;
+ * name пустое/showInList=false → запись анонимна / скрыта.
+ */
+export const donationConfirmSchema = z.object({
+  campaignId: z.number().int().positive(),
+  externalId: z.string().min(1).max(64),
+  amount: z.number().positive(),
+  name: z.string().max(128).optional(),
+  showInList: z.boolean().default(true),
+});
+export type DonationConfirmInput = z.infer<typeof donationConfirmSchema>;
+
 // ---------- Авторизация ----------
 
 /** POST /api/admin/auth/login */

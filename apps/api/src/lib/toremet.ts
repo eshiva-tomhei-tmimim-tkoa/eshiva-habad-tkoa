@@ -40,6 +40,7 @@ export interface DonationLinkInput {
   currency: string;
   recurring: boolean;
   locale: 'ru' | 'he' | 'en';
+  campaignId: number;
 }
 
 /** Язык хостинговой формы IsraelGives (ru → en, отдельной ru-локали у них нет). */
@@ -65,9 +66,11 @@ export function buildDonationUrl(input: DonationLinkInput): string | null {
   const freq = input.recurring ? '2' : '1';
 
   // successurl с плейсхолдерами IsraelGives (подставляются на их стороне).
+  // cid — наша кампания, чтобы учесть пожертвование при возврате донора.
   const successUrl =
     `${WEB_PUBLIC_URL}/${input.locale}/donate/thanks` +
-    `?sum={tsum}&cur={tcurrency}&fname={tfname}&lname={lname}&freq={frequency}&trid={trid}&donid={donid}`;
+    `?cid=${input.campaignId}` +
+    `&sum={tsum}&cur={tcurrency}&fname={tfname}&lname={lname}&freq={frequency}&trid={trid}&donid={donid}`;
 
   const url = new URL(base);
   const params: Record<string, string> = {

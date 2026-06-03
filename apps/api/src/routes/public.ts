@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import { contactInputSchema, donationInputSchema } from '@yeshiva/types';
+import { contactInputSchema, donationInputSchema, donationConfirmSchema } from '@yeshiva/types';
 import { prisma } from '../db.js';
 import { sendData, sendError, asyncHandler } from '../lib/respond.js';
 import { num, dec, loc, locArray, dayArray, timeHHMM } from '../lib/serialize.js';
 import { flattenZod } from '../lib/validate.js';
 import { buildDonationUrl, isToremetConfigured } from '../lib/toremet.js';
+import { triggerRevalidate } from '../lib/revalidate.js';
 
 export const publicRouter: Router = Router();
 
@@ -181,11 +182,13 @@ publicRouter.get(
       return;
     }
     const [donors, donorsCount] = await Promise.all([
+      // В публичном списке — только опубликованные доноры (донор может скрыться).
       prisma.donor.findMany({
-        where: { campaignId: campaign.id },
+        where: { campaignId: campaign.id, isPublic: true },
         orderBy: { donatedAt: 'desc' },
         take: 10,
       }),
+      // Счётчик — все доноры кампании (учитывает и скрытых).
       prisma.donor.count({ where: { campaignId: campaign.id } }),
     ]);
     sendData(res, {
@@ -264,12 +267,92 @@ publicRouter.post(
       currency: campaign.currency,
       recurring: parsed.data.recurring,
       locale,
+      campaignId: num(campaign.id),
     });
     if (!redirectUrl) {
       sendError(res, 503, 'PROVIDER_NOT_CONFIGURED', 'Платёжный провайдер не настроен');
       return;
     }
     sendData(res, { provider: 'israelgives', redirectUrl });
+  }),
+);
+
+// POST /api/donations/confirm — учёт завершённого пожертвования (после возврата
+// с формы IsraelGives). Идемпотентно по externalId (donid): повторный вызов
+// (обновление страницы) не задваивает сумму. Донор сам выбирает видимость.
+publicRouter.post(
+  '/donations/confirm',
+  asyncHandler(async (req, res) => {
+    const parsed = donationConfirmSchema.safeParse(req.body);
+    if (!parsed.success) {
+      sendError(res, 422, 'VALIDATION', 'Проверьте данные пожертвования', flattenZod(parsed.error));
+      return;
+    }
+    const { campaignId, externalId, amount, name, showInList } = parsed.data;
+
+    const campaign = await prisma.campaign.findUnique({ where: { id: BigInt(campaignId) } });
+    if (!campaign) {
+      sendError(res, 404, 'NOT_FOUND', 'Кампания не найдена');
+      return;
+    }
+
+    // Идемпотентность: если запись с таким externalId уже есть — ничего не меняем.
+    const existing = await prisma.donor.findUnique({ where: { externalId } });
+    if (existing) {
+      sendData(res, { id: num(existing.id), recorded: false, duplicate: true });
+      return;
+    }
+
+    const trimmed = (name ?? '').trim();
+    const isAnonymous = !showInList || trimmed.length === 0;
+
+    // Транзакция: создать донора и увеличить собранную сумму кампании.
+    const donor = await prisma.$transaction(async (tx) => {
+      const created = await tx.donor.create({
+        data: {
+          campaignId: campaign.id,
+          name: isAnonymous ? 'Аноним' : trimmed,
+          amount,
+          donatedAt: new Date(),
+          isAnonymous,
+          isPublic: showInList,
+          provider: 'israelgives',
+          externalId,
+        },
+      });
+      await tx.campaign.update({
+        where: { id: campaign.id },
+        data: { raisedAmount: { increment: amount } },
+      });
+      return created;
+    });
+
+    // Обновить ISR-кэш сайта (страница пожертвований).
+    void triggerRevalidate();
+    sendData(res, { id: num(donor.id), recorded: true, isPublic: showInList });
+  }),
+);
+
+// PATCH /api/donations/:externalId/visibility — донор меняет, показывать ли его
+// в публичном списке. Ключ — externalId (donid из его ссылки возврата).
+publicRouter.patch(
+  '/donations/:externalId/visibility',
+  asyncHandler(async (req, res) => {
+    const showInList = Boolean((req.body as { showInList?: unknown }).showInList);
+    const donor = await prisma.donor.findUnique({
+      where: { externalId: req.params.externalId },
+    });
+    if (!donor) {
+      sendError(res, 404, 'NOT_FOUND', 'Пожертвование не найдено');
+      return;
+    }
+    await prisma.donor.update({
+      where: { id: donor.id },
+      // Скрытие → анонимность; имя в записи сохраняется для отчётности.
+      data: { isPublic: showInList, isAnonymous: !showInList || donor.name === 'Аноним' },
+    });
+    void triggerRevalidate();
+    sendData(res, { id: num(donor.id), isPublic: showInList });
   }),
 );
 
