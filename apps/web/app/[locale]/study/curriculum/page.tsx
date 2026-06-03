@@ -4,7 +4,7 @@ import { PageHeader } from '@/components/PageHeader';
 import type { SubjectDto } from '@/lib/dto';
 import type { AppLocale } from '@/i18n/routing';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export default async function CurriculumPage({
   params,

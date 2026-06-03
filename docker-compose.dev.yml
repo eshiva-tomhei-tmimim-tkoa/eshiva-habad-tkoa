@@ -1,0 +1,127 @@
+# Dev-стек в Docker: mysql + api + web + admin с hot-reload.
+# Зачем: на Windows/OneDrive локальный `next dev` падает на readlink (.next).
+# Здесь .next/node_modules/dist живут в Linux-томах, а исходники — bind-mount.
+#
+# Запуск:   docker compose -f docker-compose.dev.yml up --build
+# Сид БД:   docker compose -f docker-compose.dev.yml exec api pnpm --filter @yeshiva/api db:seed
+# Адреса:   web http://localhost:3000 · admin http://localhost:3001 · api http://localhost:4000/api
+
+x-app-volumes: &app-volumes
+  - ./:/app
+  - /app/node_modules
+  - /app/apps/api/node_modules
+  - /app/apps/web/node_modules
+  - /app/apps/admin/node_modules
+  - /app/packages/types/node_modules
+  - /app/packages/config/node_modules
+  - /app/packages/types/dist
+
+x-watch-env: &watch-env
+  # Bind-mount на Windows не шлёт inotify — включаем опрос для hot-reload.
+  WATCHPACK_POLLING: 'true'
+  CHOKIDAR_USEPOLLING: 'true'
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: yeshiva-dev-mysql
+    restart: unless-stopped
+    ports:
+      - '3307:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: yeshiva_tkoa
+      MYSQL_USER: yeshiva
+      MYSQL_PASSWORD: yeshiva
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-proot']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: yeshiva-dev:latest
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: sh -c "pnpm --filter @yeshiva/api exec prisma migrate deploy && pnpm --filter @yeshiva/api dev"
+    environment:
+      <<: *watch-env
+      NODE_ENV: development
+      API_PORT: '4000'
+      DATABASE_URL: mysql://yeshiva:yeshiva@mysql:3306/yeshiva_tkoa
+      JWT_SECRET: dev-secret-change-me
+      CORS_ORIGINS: http://localhost:3000,http://localhost:3001
+      UPLOAD_DIR: /app/apps/api/uploads
+      WEB_REVALIDATE_URL: http://web:3000/api/revalidate
+      REVALIDATE_SECRET: dev-revalidate-secret
+      WEB_PUBLIC_URL: http://localhost:3000
+      # Платежи (опц.): задать реальный slug для проверки доната
+      TOREMET_PAY_URL: ${TOREMET_PAY_URL:-}
+    ports:
+      - '4000:4000'
+    volumes: *app-volumes
+
+  web:
+    image: yeshiva-dev:latest
+    restart: unless-stopped
+    depends_on: [api]
+    command: pnpm --filter @yeshiva/web dev
+    environment:
+      <<: *watch-env
+      NODE_ENV: development
+      PORT: '3000'
+      HOSTNAME: 0.0.0.0
+      # В браузере — публичный адрес API; на сервере (SSR/ISR) — внутренняя сеть.
+      NEXT_PUBLIC_API_URL: http://localhost:4000/api
+      API_INTERNAL_URL: http://api:4000/api
+      REVALIDATE_SECRET: dev-revalidate-secret
+      REVALIDATE_SECONDS: '300'
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - /app/apps/api/node_modules
+      - /app/apps/web/node_modules
+      - /app/apps/admin/node_modules
+      - /app/packages/types/node_modules
+      - /app/packages/config/node_modules
+      - /app/packages/types/dist
+      - /app/apps/web/.next
+
+  admin:
+    image: yeshiva-dev:latest
+    restart: unless-stopped
+    depends_on: [api]
+    command: pnpm --filter @yeshiva/admin dev
+    environment:
+      <<: *watch-env
+      NODE_ENV: development
+      PORT: '3001'
+      HOSTNAME: 0.0.0.0
+      NEXT_PUBLIC_API_URL: http://localhost:4000/api
+    ports:
+      - '3001:3001'
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - /app/apps/api/node_modules
+      - /app/apps/web/node_modules
+      - /app/apps/admin/node_modules
+      - /app/packages/types/node_modules
+      - /app/packages/config/node_modules
+      - /app/packages/types/dist
+      - /app/apps/admin/.next
+
+volumes:
+  mysql_dev_data:

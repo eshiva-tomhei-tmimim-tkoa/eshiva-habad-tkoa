@@ -5,15 +5,17 @@ import { ImgPlaceholder } from '@/components/PageHeader';
 import type { TeamMember, CampaignDto } from '@/lib/dto';
 import type { AppLocale } from '@/i18n/routing';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300; // ISR: статика + ревалидация (мгновенная — по тегу из админки)
 
 export default async function HomePage({ params }: { params: Promise<{ locale: AppLocale }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const tr = await getTranslations('home');
 
-  const team = await apiGet<TeamMember[]>('/team', []);
-  const campaign = await apiGet<CampaignDto | null>('/campaign', null);
+  const [team, campaign] = await Promise.all([
+    apiGet<TeamMember[]>('/team', []),
+    apiGet<CampaignDto | null>('/campaign', null),
+  ]);
   const pct = campaign ? Math.round((campaign.raisedAmount / campaign.goalAmount) * 100) : 0;
 
   const pillars = [

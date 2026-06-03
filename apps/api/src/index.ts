@@ -46,13 +46,11 @@ app.use('/api', (_req, res) => {
 
 // Единый обработчик ошибок.
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
-  // eslint-disable-next-line no-console
   console.error('[api] error:', err);
   sendError(res, 500, 'INTERNAL', 'Внутренняя ошибка сервера');
 };
 app.use(errorHandler);
 
 app.listen(port, () => {
-  // eslint-disable-next-line no-console
   console.log(`[api] listening on http://localhost:${port}/api`);
 });

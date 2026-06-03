@@ -15,7 +15,6 @@ export async function triggerRevalidate(): Promise<void> {
       signal: AbortSignal.timeout(5000),
     });
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.warn('[api] revalidate failed:', (err as Error).message);
   }
 }

@@ -4,7 +4,7 @@ import { PageHeader, ImgPlaceholder } from '@/components/PageHeader';
 import type { StudentDto } from '@/lib/dto';
 import type { AppLocale } from '@/i18n/routing';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export default async function StudentsPage({ params }: { params: Promise<{ locale: AppLocale }> }) {
   const { locale } = await params;

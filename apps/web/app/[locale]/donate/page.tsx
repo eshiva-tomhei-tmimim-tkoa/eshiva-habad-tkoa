@@ -5,7 +5,7 @@ import { DonateForm } from '@/components/DonateForm';
 import type { CampaignDto } from '@/lib/dto';
 import type { AppLocale } from '@/i18n/routing';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export default async function DonatePage({ params }: { params: Promise<{ locale: AppLocale }> }) {
   const { locale } = await params;

@@ -426,7 +426,6 @@ async function main() {
     },
   });
 
-  // eslint-disable-next-line no-console
   console.log(
     `[seed] готово: ${positionTitles.length} должностей, ${peopleData.length} людей, ` +
       `${subjectsData.length} предметов, ${studentsData.length} учеников, ` +
@@ -437,7 +436,6 @@ async function main() {
 
 main()
   .catch((e) => {
-    // eslint-disable-next-line no-console
     console.error(e);
     process.exit(1);
   })

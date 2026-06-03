@@ -1,6 +1,10 @@
 import type { Localized } from '@yeshiva/types';
 
+// Клиентский URL API (доступен из браузера) — «зашивается» в бандл.
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
+// Серверный URL для SSR/ISR-фетча (внутренняя сеть Docker, напр. http://api:4000/api).
+// Если не задан — используем публичный.
+const SERVER_API_URL = process.env.API_INTERNAL_URL ?? API_URL;
 
 /** Общий тег кэша для всех данных из API — инвалидируется при сохранении в админке. */
 export const CONTENT_TAG = 'content';
@@ -15,7 +19,7 @@ const REVALIDATE_SECONDS = Number(process.env.REVALIDATE_SECONDS ?? 3600);
  */
 export async function apiGet<T>(path: string, fallback: T): Promise<T> {
   try {
-    const res = await fetch(`${API_URL}${path}`, {
+    const res = await fetch(`${SERVER_API_URL}${path}`, {
       next: { revalidate: REVALIDATE_SECONDS, tags: [CONTENT_TAG] },
     });
     if (!res.ok) return fallback;
