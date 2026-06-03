@@ -1,9 +1,7 @@
-import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { Link } from '@/i18n/navigation';
 
 type Variant = 'primary' | 'secondary' | 'ghost';
-
-const cls = (variant: Variant) => `btn btn-${variant}`;
 
 export function Btn({
   href,
@@ -17,7 +15,7 @@ export function Btn({
   arrow?: boolean;
 }) {
   return (
-    <Link href={href} className={cls(variant)}>
+    <Link href={href} className={`btn btn-${variant}`}>
       {children}
       {arrow && <span aria-hidden>→</span>}
     </Link>

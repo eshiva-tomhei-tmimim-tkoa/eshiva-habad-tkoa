@@ -1,10 +1,12 @@
 'use client';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 const PRESETS = [50, 100, 180, 360, 720, 1800];
 
 export function DonateForm({ campaignId }: { campaignId: number }) {
+  const tr = useTranslations('donate');
   const [amount, setAmount] = useState(180);
   const [recurring, setRecurring] = useState(false);
   const [status, setStatus] = useState<'idle' | 'sending' | 'pending' | 'error'>('idle');
@@ -21,7 +23,7 @@ export function DonateForm({ campaignId }: { campaignId: number }) {
       });
       if (!res.ok) {
         const j = await res.json().catch(() => null);
-        throw new Error(j?.error?.message ?? 'Ошибка');
+        throw new Error(j?.error?.message ?? 'Error');
       }
       setStatus('pending');
     } catch (err) {
@@ -32,7 +34,7 @@ export function DonateForm({ campaignId }: { campaignId: number }) {
 
   return (
     <div className="card" style={{ padding: 28 }}>
-      <h3 style={{ marginBottom: 16 }}>Сделать пожертвование</h3>
+      <h3 style={{ marginBottom: 16 }}>{tr('makeDonation')}</h3>
       <div
         style={{
           display: 'grid',
@@ -63,21 +65,19 @@ export function DonateForm({ campaignId }: { campaignId: number }) {
           checked={recurring}
           onChange={(e) => setRecurring(e.target.checked)}
         />
-        Ежемесячно
+        {tr('monthly')}
       </label>
       {status === 'pending' ? (
-        <div style={{ color: 'var(--success)' }}>
-          Намерение создано. Подключение платёжного провайдера — на этапе 6.
-        </div>
+        <div style={{ color: 'var(--success)' }}>{tr('pending')}</div>
       ) : (
         <button onClick={donate} className="btn btn-primary" disabled={status === 'sending'}>
-          {status === 'sending' ? '…' : `Пожертвовать ${amount} ₪${recurring ? ' / мес' : ''}`}
+          {status === 'sending'
+            ? '…'
+            : `${tr('donate')} ${amount} ₪${recurring ? ` ${tr('perMonth')}` : ''}`}
         </button>
       )}
       {status === 'error' && <div style={{ color: '#e5484d', marginTop: 8 }}>{error}</div>}
-      <p style={{ color: 'var(--text-dim)', fontSize: '0.8rem', marginTop: 16 }}>
-        Защищённый платёж · 501(c)(3) · tax-deductible
-      </p>
+      <p style={{ color: 'var(--text-dim)', fontSize: '0.8rem', marginTop: 16 }}>{tr('secure')}</p>
     </div>
   );
 }

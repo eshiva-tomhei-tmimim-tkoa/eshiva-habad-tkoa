@@ -1,16 +1,18 @@
-import { PageHeader } from '../../components/PageHeader';
-import { ContactForm } from '../../components/ContactForm';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { PageHeader } from '@/components/PageHeader';
+import { ContactForm } from '@/components/ContactForm';
+import type { AppLocale } from '@/i18n/routing';
 
 export const dynamic = 'force-dynamic';
 
-export default function ContactsPage() {
+export default async function ContactsPage({ params }: { params: Promise<{ locale: AppLocale }> }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const tr = await getTranslations('contacts');
+
   return (
     <>
-      <PageHeader
-        eyebrow="Контакты"
-        title="Свяжитесь с нами"
-        desc="Ткоа, Гуш-Эцион — около 25 км от Иерусалима."
-      />
+      <PageHeader eyebrow={tr('eyebrow')} title={tr('title')} desc={tr('desc')} />
       <section
         className="container-x"
         style={{
@@ -22,11 +24,11 @@ export default function ContactsPage() {
       >
         <div className="card" style={{ padding: 28, display: 'grid', gap: 16, alignContent: 'start' }}>
           <div>
-            <div className="eyebrow">Адрес</div>
+            <div className="eyebrow">{tr('address')}</div>
             <div style={{ marginTop: 4 }}>Tkoa, Gush Etzion, Israel</div>
           </div>
           <div>
-            <div className="eyebrow">Телефоны</div>
+            <div className="eyebrow">{tr('phones')}</div>
             <div style={{ marginTop: 4 }}>
               <a href="tel:+972535520466">+972-53-552-0466</a>
               <br />
@@ -34,14 +36,14 @@ export default function ContactsPage() {
             </div>
           </div>
           <div>
-            <div className="eyebrow">Email</div>
+            <div className="eyebrow">{tr('email')}</div>
             <div style={{ marginTop: 4 }}>
               <a href="mailto:info@yeshiva-tkoa.org">info@yeshiva-tkoa.org</a>
             </div>
           </div>
           <div>
-            <div className="eyebrow">Статус</div>
-            <div style={{ marginTop: 4 }}>501(c)(3) — пожертвования tax-deductible</div>
+            <div className="eyebrow">{tr('status')}</div>
+            <div style={{ marginTop: 4 }}>{tr('statusValue')}</div>
           </div>
         </div>
         <ContactForm />

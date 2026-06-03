@@ -1,18 +1,21 @@
-import { apiGet, t } from '../../../lib/api';
-import { PageHeader } from '../../../components/PageHeader';
-import { CATEGORY_LABELS, type DailyBlockDto } from '../../../lib/dto';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { apiGet, t } from '@/lib/api';
+import { PageHeader } from '@/components/PageHeader';
+import type { DailyBlockDto } from '@/lib/dto';
+import type { AppLocale } from '@/i18n/routing';
 
 export const dynamic = 'force-dynamic';
 
-export default async function DailyPage() {
+export default async function DailyPage({ params }: { params: Promise<{ locale: AppLocale }> }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const tr = await getTranslations('daily');
+  const cat = await getTranslations('categories');
   const blocks = await apiGet<DailyBlockDto[]>('/daily', []);
+
   return (
     <>
-      <PageHeader
-        eyebrow="Распорядок дня"
-        title="Каждый день — структура, ритм и баланс"
-        desc="Учёба, молитва, общая трапеза, спорт и личное время."
-      />
+      <PageHeader eyebrow={tr('eyebrow')} title={tr('title')} desc={tr('desc')} />
       <section className="container-x" style={{ paddingBottom: 64, display: 'grid', gap: 12 }}>
         {blocks.map((b) => (
           <div
@@ -25,11 +28,11 @@ export default async function DailyPage() {
             </div>
             <div>
               <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
-                <h3 style={{ fontSize: '1.05rem' }}>{t(b.title)}</h3>
-                <span className="tag">{CATEGORY_LABELS[b.category]}</span>
+                <h3 style={{ fontSize: '1.05rem' }}>{t(b.title, locale)}</h3>
+                <span className="tag">{cat(b.category)}</span>
               </div>
               <p style={{ color: 'var(--text-soft)', fontSize: '0.9rem', marginTop: 4 }}>
-                {t(b.description)}
+                {t(b.description, locale)}
               </p>
             </div>
           </div>

@@ -1,0 +1,122 @@
+{
+  "nav": {
+    "home": "Home",
+    "team": "Team",
+    "students": "Students",
+    "study": "Study",
+    "contacts": "Contacts",
+    "support": "Support"
+  },
+  "home": {
+    "eyebrow": "Yeshiva Chabad Lubavitch · Tkoa",
+    "titlePre": "Torah, a profession and the Land of Israel —",
+    "titleHighlight": "in one place",
+    "lead": "A universal school for young men from the CIS: the teachings of the Lubavitcher Rebbe, a profession, Hebrew and integration under experienced mentors.",
+    "ctaStudy": "The study process",
+    "ctaDonate": "Support the yeshiva",
+    "rebbeEyebrow": "Foundation",
+    "rebbeTitle": "The teachings of the Lubavitcher Rebbe",
+    "rebbeText": "The program is built on the teachings of Rabbi Menachem Mendel Schneerson. Yechi Adoneinu Moreinu veRabbeinu Melech haMoshiach le'olam va'ed.",
+    "pillarsTitle": "Four lines of the program",
+    "mentorsTitle": "Our mentors",
+    "allTeam": "Full team",
+    "pillar1Title": "Torah and Chassidut",
+    "pillar1Desc": "Talmud, Halacha, Chassidut and the Rebbe's sichot with experienced mentors.",
+    "pillar2Title": "Profession",
+    "pillar2Desc": "Alongside study — applied courses and preparation for work.",
+    "pillar3Title": "Hebrew and integration",
+    "pillar3Desc": "Language and integration into life in the Land of Israel.",
+    "pillar4Title": "Experienced mentors",
+    "pillar4Desc": "A blend of Torah depth and practical experience.",
+    "raised": "Raised",
+    "of": "of",
+    "donors": "donors",
+    "support": "Support"
+  },
+  "team": {
+    "eyebrow": "Our team",
+    "title": "Experienced mentors with deep experience of life in the Land of Israel",
+    "desc": "Each teacher combines the academic depth of Torah with practical experience of life in Israel and work in a secular profession."
+  },
+  "students": {
+    "eyebrow": "Our students",
+    "title": "Stories of those who study with us",
+    "desc": "Some prepare for semicha, others learn a profession in parallel. One thing unites them — Torah and the Land of Israel.",
+    "mentor": "Mentor",
+    "duration": "At the yeshiva",
+    "courses": "Courses"
+  },
+  "study": {
+    "eyebrow": "The study process",
+    "title": "How study works at the yeshiva",
+    "desc": "A balanced day, a thoughtful program and a clear schedule.",
+    "dailyTitle": "Daily routine",
+    "dailyDesc": "The structure of the study day: prayer, study, meals, sport.",
+    "curriculumTitle": "Curriculum",
+    "curriculumDesc": "Five Torah disciplines — from text to commentaries.",
+    "scheduleTitle": "Schedule",
+    "scheduleDesc": "When and where each class takes place.",
+    "open": "Open"
+  },
+  "daily": {
+    "eyebrow": "Daily routine",
+    "title": "Every day — structure, rhythm and balance",
+    "desc": "Study, prayer, shared meals, sport and personal time."
+  },
+  "curriculum": {
+    "eyebrow": "Curriculum",
+    "title": "Five disciplines — one system",
+    "desc": "Each subject is led by an experienced mentor. From plain text to the commentaries of Rishonim and Acharonim."
+  },
+  "schedule": {
+    "eyebrow": "Class schedule",
+    "title": "When and where each class takes place",
+    "desc": "The full weekly schedule of classes at the yeshiva."
+  },
+  "contacts": {
+    "eyebrow": "Contacts",
+    "title": "Get in touch",
+    "desc": "Tkoa, Gush Etzion — about 25 km from Jerusalem.",
+    "address": "Address",
+    "phones": "Phones",
+    "email": "Email",
+    "status": "Status",
+    "statusValue": "501(c)(3) — donations are tax-deductible",
+    "formName": "Name",
+    "formEmail": "Email",
+    "formPhone": "Phone (optional)",
+    "formMessage": "Message",
+    "formSend": "Send",
+    "formSending": "Sending…",
+    "formThanks": "Thank you!",
+    "formThanksDesc": "Your message has been sent. We will get in touch with you."
+  },
+  "donate": {
+    "eyebrow": "Support",
+    "titleFallback": "Support the yeshiva",
+    "desc": "Your donation helps students combine Torah, a profession and life in the Land of Israel.",
+    "of": "of",
+    "donors": "donors",
+    "recentDonors": "Recent donors",
+    "makeDonation": "Make a donation",
+    "monthly": "Monthly",
+    "donate": "Donate",
+    "perMonth": "/ mo",
+    "pending": "Intent created. Payment provider integration — in stage 6.",
+    "secure": "Secure payment · 501(c)(3) · tax-deductible"
+  },
+  "footer": {
+    "about": "A school in the village of Tkoa (Gush Etzion, Israel). Torah and Chassidut, a profession, Hebrew and integration.",
+    "sections": "Sections",
+    "contacts": "Contacts",
+    "study": "The study process",
+    "donate": "Donation"
+  },
+  "categories": {
+    "prayer": "Prayer",
+    "study": "Study",
+    "meal": "Meal",
+    "spirit": "Spiritual",
+    "personal": "Personal"
+  }
+}

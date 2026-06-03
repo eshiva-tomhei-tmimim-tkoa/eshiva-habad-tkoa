@@ -1,18 +1,20 @@
-import { apiGet, t } from '../../../lib/api';
-import { PageHeader } from '../../../components/PageHeader';
-import { WEEKDAYS, type ScheduleSlotDto } from '../../../lib/dto';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { apiGet, t } from '@/lib/api';
+import { PageHeader } from '@/components/PageHeader';
+import { WEEKDAYS, type ScheduleSlotDto } from '@/lib/dto';
+import type { AppLocale } from '@/i18n/routing';
 
 export const dynamic = 'force-dynamic';
 
-export default async function SchedulePage() {
+export default async function SchedulePage({ params }: { params: Promise<{ locale: AppLocale }> }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const tr = await getTranslations('schedule');
   const slots = await apiGet<ScheduleSlotDto[]>('/schedule', []);
+
   return (
     <>
-      <PageHeader
-        eyebrow="Расписание занятий"
-        title="Когда и где идёт каждое занятие"
-        desc="Полное еженедельное расписание учебных занятий в Ешиве."
-      />
+      <PageHeader eyebrow={tr('eyebrow')} title={tr('title')} desc={tr('desc')} />
       <section className="container-x" style={{ paddingBottom: 64 }}>
         <div className="card" style={{ overflow: 'hidden' }}>
           {slots.map((s, i) => (
@@ -27,8 +29,10 @@ export default async function SchedulePage() {
                 alignItems: 'center',
               }}
             >
-              <div style={{ fontWeight: 600 }}>{t(s.subject.title)}</div>
-              <div style={{ color: 'var(--text-soft)', fontSize: '0.9rem' }}>{t(s.person.name)}</div>
+              <div style={{ fontWeight: 600 }}>{t(s.subject.title, locale)}</div>
+              <div style={{ color: 'var(--text-soft)', fontSize: '0.9rem' }}>
+                {t(s.person.name, locale)}
+              </div>
               <div className="mono" style={{ color: 'var(--primary)', fontSize: '0.9rem' }}>
                 {s.startTime}–{s.endTime}
               </div>
