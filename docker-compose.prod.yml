@@ -37,6 +37,10 @@ services:
       UPLOAD_DIR: /app/apps/api/uploads
       WEB_REVALIDATE_URL: http://web:3000/api/revalidate
       REVALIDATE_SECRET: ${REVALIDATE_SECRET}
+      # Платежи Israel Toremet / IsraelGives
+      TOREMET_PAY_URL: ${TOREMET_PAY_URL}
+      TOREMET_CURRENCY_IDS: ${TOREMET_CURRENCY_IDS:-}
+      WEB_PUBLIC_URL: https://${WEB_DOMAIN}
     volumes:
       - uploads:/app/apps/api/uploads
 

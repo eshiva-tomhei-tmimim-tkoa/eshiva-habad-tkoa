@@ -102,7 +102,13 @@
     "monthly": "חודשי",
     "donate": "תרומה",
     "perMonth": "/ לחודש",
-    "pending": "הכוונה נוצרה. חיבור ספק הסליקה — בשלב 6.",
+    "redirecting": "מעבר לתשלום",
+    "thanksTitle": "תודה על התרומה!",
+    "thanksDesc": "התשלום מעובד דרך Israel Toremet (IsraelGives).",
+    "thanksHi": "תודה",
+    "thanksRef": "מספר עסקה",
+    "thanksReceipt": "קבלה לצורכי מס תישלח לדוא״ל שלכם מ-Israel Toremet.",
+    "thanksHome": "לעמוד הבית",
     "secure": "תשלום מאובטח · 501(c)(3) · מוכר לצורכי מס"
   },
   "footer": {

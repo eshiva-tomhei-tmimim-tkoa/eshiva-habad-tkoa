@@ -4,6 +4,7 @@ import { prisma } from '../db.js';
 import { sendData, sendError, asyncHandler } from '../lib/respond.js';
 import { num, dec, loc, locArray, dayArray, timeHHMM } from '../lib/serialize.js';
 import { flattenZod } from '../lib/validate.js';
+import { buildDonationUrl, isToremetConfigured } from '../lib/toremet.js';
 
 export const publicRouter: Router = Router();
 
@@ -233,13 +234,17 @@ publicRouter.post(
   }),
 );
 
-// POST /api/donations — инициировать пожертвование (заглушка провайдера, этап 6).
+// POST /api/donations — построить ссылку на оплату Israel Toremet / IsraelGives.
 publicRouter.post(
   '/donations',
   asyncHandler(async (req, res) => {
     const parsed = donationInputSchema.safeParse(req.body);
     if (!parsed.success) {
       sendError(res, 422, 'VALIDATION', 'Проверьте параметры пожертвования', flattenZod(parsed.error));
+      return;
+    }
+    if (!isToremetConfigured()) {
+      sendError(res, 503, 'PROVIDER_NOT_CONFIGURED', 'Платёжный провайдер не настроен');
       return;
     }
     const campaign = await prisma.campaign.findUnique({
@@ -249,13 +254,22 @@ publicRouter.post(
       sendError(res, 404, 'NOT_FOUND', 'Кампания не найдена');
       return;
     }
-    // Этап 6: создать намерение у платёжного провайдера и вернуть redirect/checkout URL.
-    sendData(res, {
-      status: 'pending',
-      provider: null,
+    const localeRaw = String((req.body as { locale?: string }).locale ?? 'ru');
+    const locale = (['ru', 'he', 'en'].includes(localeRaw) ? localeRaw : 'ru') as
+      | 'ru'
+      | 'he'
+      | 'en';
+    const redirectUrl = buildDonationUrl({
       amount: parsed.data.amount,
-      campaignId: parsed.data.campaignId,
+      currency: campaign.currency,
+      recurring: parsed.data.recurring,
+      locale,
     });
+    if (!redirectUrl) {
+      sendError(res, 503, 'PROVIDER_NOT_CONFIGURED', 'Платёжный провайдер не настроен');
+      return;
+    }
+    sendData(res, { provider: 'israelgives', redirectUrl });
   }),
 );
 

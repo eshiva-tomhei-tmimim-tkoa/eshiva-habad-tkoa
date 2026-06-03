@@ -102,7 +102,13 @@
     "monthly": "Monthly",
     "donate": "Donate",
     "perMonth": "/ mo",
-    "pending": "Intent created. Payment provider integration — in stage 6.",
+    "redirecting": "Redirecting to payment",
+    "thanksTitle": "Thank you for your donation!",
+    "thanksDesc": "Payment is processed via Israel Toremet (IsraelGives).",
+    "thanksHi": "Thank you",
+    "thanksRef": "Transaction ID",
+    "thanksReceipt": "A tax-deductible receipt will be emailed to you by Israel Toremet.",
+    "thanksHome": "Back home",
     "secure": "Secure payment · 501(c)(3) · tax-deductible"
   },
   "footer": {

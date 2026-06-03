@@ -102,7 +102,13 @@
     "monthly": "Ежемесячно",
     "donate": "Пожертвовать",
     "perMonth": "/ мес",
-    "pending": "Намерение создано. Подключение платёжного провайдера — на этапе 6.",
+    "redirecting": "Переход к оплате",
+    "thanksTitle": "Спасибо за пожертвование!",
+    "thanksDesc": "Оплата обрабатывается через Israel Toremet (IsraelGives).",
+    "thanksHi": "Спасибо",
+    "thanksRef": "Номер транзакции",
+    "thanksReceipt": "Квитанция для налогового вычета придёт на вашу почту от Israel Toremet.",
+    "thanksHome": "На главную",
     "secure": "Защищённый платёж · 501(c)(3) · tax-deductible"
   },
   "footer": {

@@ -1,15 +1,16 @@
 'use client';
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 const PRESETS = [50, 100, 180, 360, 720, 1800];
 
 export function DonateForm({ campaignId }: { campaignId: number }) {
   const tr = useTranslations('donate');
+  const locale = useLocale();
   const [amount, setAmount] = useState(180);
   const [recurring, setRecurring] = useState(false);
-  const [status, setStatus] = useState<'idle' | 'sending' | 'pending' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'sending' | 'error'>('idle');
   const [error, setError] = useState('');
 
   async function donate() {
@@ -19,13 +20,12 @@ export function DonateForm({ campaignId }: { campaignId: number }) {
       const res = await fetch(`${API_URL}/donations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ campaignId, amount, recurring }),
+        body: JSON.stringify({ campaignId, amount, recurring, locale }),
       });
-      if (!res.ok) {
-        const j = await res.json().catch(() => null);
-        throw new Error(j?.error?.message ?? 'Error');
-      }
-      setStatus('pending');
+      const j = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(j?.error?.message ?? 'Error');
+      // Редирект на хостинговую форму оплаты Israel Toremet / IsraelGives.
+      window.location.href = j.data.redirectUrl as string;
     } catch (err) {
       setStatus('error');
       setError((err as Error).message);
@@ -67,15 +67,11 @@ export function DonateForm({ campaignId }: { campaignId: number }) {
         />
         {tr('monthly')}
       </label>
-      {status === 'pending' ? (
-        <div style={{ color: 'var(--success)' }}>{tr('pending')}</div>
-      ) : (
-        <button onClick={donate} className="btn btn-primary" disabled={status === 'sending'}>
-          {status === 'sending'
-            ? '…'
-            : `${tr('donate')} ${amount} ₪${recurring ? ` ${tr('perMonth')}` : ''}`}
-        </button>
-      )}
+      <button onClick={donate} className="btn btn-primary" disabled={status === 'sending'}>
+        {status === 'sending'
+          ? `${tr('redirecting')}…`
+          : `${tr('donate')} ${amount} ₪${recurring ? ` ${tr('perMonth')}` : ''}`}
+      </button>
       {status === 'error' && <div style={{ color: '#e5484d', marginTop: 8 }}>{error}</div>}
       <p style={{ color: 'var(--text-dim)', fontSize: '0.8rem', marginTop: 16 }}>{tr('secure')}</p>
     </div>
