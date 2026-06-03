@@ -11,7 +11,7 @@
     "build": "prisma generate && tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p prisma/tsconfig.json",
     "clean": "rimraf dist .turbo",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
