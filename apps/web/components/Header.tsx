@@ -1,8 +1,9 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { routing } from '@/i18n/routing';
+import { useUIStore } from '@/store/ui';
 import { Logo } from './Logo';
 import { Icon } from './Icons';
 
@@ -13,19 +14,18 @@ export function Header() {
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Глобальный UI-стейт (Zustand): тема и мобильное меню.
+  const theme = useUIStore((s) => s.theme);
+  const toggleTheme = useUIStore((s) => s.toggleTheme);
+  const hydrateTheme = useUIStore((s) => s.hydrateTheme);
+  const mobileOpen = useUIStore((s) => s.mobileNavOpen);
+  const setMobileOpen = useUIStore((s) => s.setMobileNav);
+
+  // Подтянуть сохранённую тему из localStorage после маунта (на сервере её нет).
   useEffect(() => {
-    setTheme((localStorage.getItem('theme') as 'light' | 'dark' | null) ?? 'light');
-  }, []);
-
-  function toggleTheme() {
-    const next = theme === 'light' ? 'dark' : 'light';
-    setTheme(next);
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('theme', next);
-  }
+    hydrateTheme();
+  }, [hydrateTheme]);
 
   function switchLocale(next: string) {
     router.replace(pathname, { locale: next });
