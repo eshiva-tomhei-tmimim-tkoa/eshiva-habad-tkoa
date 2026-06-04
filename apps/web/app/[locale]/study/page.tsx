@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { PageHeader } from '@/components/PageHeader';
-import { Btn } from '@/components/Btn';
+import { Icon } from '@/components/Icons';
+import { Link } from '@/i18n/navigation';
 import type { AppLocale } from '@/i18n/routing';
 
 export default async function StudyHubPage({ params }: { params: Promise<{ locale: AppLocale }> }) {
@@ -8,32 +9,53 @@ export default async function StudyHubPage({ params }: { params: Promise<{ local
   setRequestLocale(locale);
   const tr = await getTranslations('study');
 
-  const links = [
-    { href: '/study/daily', title: tr('dailyTitle'), desc: tr('dailyDesc') },
-    { href: '/study/curriculum', title: tr('curriculumTitle'), desc: tr('curriculumDesc') },
-    { href: '/study/schedule', title: tr('scheduleTitle'), desc: tr('scheduleDesc') },
+  const cards = [
+    { href: '/study/daily', tag: '01', title: tr('dailyTitle'), desc: tr('dailyDesc'), meta: tr('dailyMeta') },
+    { href: '/study/curriculum', tag: '02', title: tr('curriculumTitle'), desc: tr('curriculumDesc'), meta: tr('curriculumMeta') },
+    { href: '/study/schedule', tag: '03', title: tr('scheduleTitle'), desc: tr('scheduleDesc'), meta: tr('scheduleMeta') },
+  ];
+
+  const principles = [
+    { n: '01', t: tr('principle1T'), d: tr('principle1D') },
+    { n: '02', t: tr('principle2T'), d: tr('principle2D') },
+    { n: '03', t: tr('principle3T'), d: tr('principle3D') },
+    { n: '04', t: tr('principle4T'), d: tr('principle4D') },
   ];
 
   return (
     <>
       <PageHeader eyebrow={tr('eyebrow')} title={tr('title')} desc={tr('desc')} />
-      <section className="container-x" style={{ paddingBottom: 64 }}>
-        <div
-          style={{
-            display: 'grid',
-            gap: 16,
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-          }}
-        >
-          {links.map((l) => (
-            <div key={l.href} className="card" style={{ padding: 28 }}>
-              <h3 style={{ fontSize: '1.3rem', marginBottom: 8 }}>{l.title}</h3>
-              <p style={{ color: 'var(--text-soft)', marginBottom: 20 }}>{l.desc}</p>
-              <Btn href={l.href} variant="ghost" arrow>
-                {tr('open')}
-              </Btn>
+      <section className="section" style={{ paddingTop: 16 }}>
+        <div className="container">
+          <div className="hub-grid">
+            {cards.map((c, i) => (
+              <Link key={c.href} className={`hub-card card card-link fade-up fade-up-${i + 1}`} href={c.href}>
+                <div className="hub-card-tag mono">{c.tag} / 03</div>
+                <h3 className="hub-card-title">{c.title}</h3>
+                <p className="hub-card-desc">{c.desc}</p>
+                <div className="hub-card-foot">
+                  <span className="hub-card-meta mono">{c.meta}</span>
+                  <span className="hub-card-arrow"><Icon.arrow /></span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <div className="principles">
+            <div className="principles-head">
+              <div className="section-eyebrow">{tr('principlesEyebrow')}</div>
+              <h2 className="section-title">{tr('principlesTitle')}</h2>
             </div>
-          ))}
+            <div className="principles-grid">
+              {principles.map((p, i) => (
+                <div key={p.n} className={`principle fade-up fade-up-${i + 1}`}>
+                  <div className="principle-num mono">{p.n}</div>
+                  <h4 className="principle-t">{p.t}</h4>
+                  <p className="principle-d">{p.d}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
     </>

@@ -1,54 +1,55 @@
+import type { CSSProperties, ReactNode } from 'react';
+
 export function PageHeader({
   eyebrow,
   title,
   desc,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   desc?: string;
 }) {
   return (
-    <section className="container-x" style={{ paddingTop: 64, paddingBottom: 32 }}>
-      <div className="eyebrow" style={{ marginBottom: 12 }}>
-        {eyebrow}
+    <section className="section" style={{ paddingBottom: 24 }}>
+      <div className="container">
+        <div className="section-head fade-up">
+          {eyebrow && <div className="section-eyebrow">{eyebrow}</div>}
+          <h1 className="section-title" style={{ fontSize: 'clamp(2.2rem, 5vw, 4rem)' }}>
+            {title}
+          </h1>
+          {desc && <p className="section-desc">{desc}</p>}
+        </div>
       </div>
-      <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3.2rem)', maxWidth: 900 }}>{title}</h1>
-      {desc && (
-        <p style={{ color: 'var(--text-soft)', marginTop: 16, maxWidth: 720, fontSize: '1.1rem' }}>
-          {desc}
-        </p>
-      )}
     </section>
   );
 }
 
+/**
+ * Плейсхолдер под медиаконтент (фото/видео). Без `src` рисует диагональную
+ * штриховку + пунктирную рамку и подпись-метку — обозначение места под медиа
+ * (как в эталоне). С `src` показывает изображение, заполняя область.
+ * `children` рендерится поверх (например, кнопка play).
+ */
 export function ImgPlaceholder({
   label,
   aspect = '4/3',
   src,
+  style,
+  children,
 }: {
   label: string;
   aspect?: string;
   src?: string;
+  style?: CSSProperties;
+  children?: ReactNode;
 }) {
   return (
     <div
-      style={{
-        aspectRatio: aspect,
-        borderRadius: 16,
-        background: src
-          ? `center/cover no-repeat url(${src})`
-          : 'linear-gradient(135deg, var(--primary-soft), var(--bg-elev-2))',
-        border: '1px solid var(--border-soft)',
-        display: 'grid',
-        placeItems: 'center',
-        color: 'var(--text-dim)',
-        fontFamily: 'var(--font-mono)',
-        fontSize: '0.8rem',
-        overflow: 'hidden',
-      }}
+      className={`img-placeholder${src ? ' has-img' : ''}`}
+      style={{ aspectRatio: aspect, ...style }}
     >
-      {!src && label}
+      {src && <img src={src} alt={label} />}
+      {children ?? (!src && <span className="img-placeholder-label">{label}</span>)}
     </div>
   );
 }

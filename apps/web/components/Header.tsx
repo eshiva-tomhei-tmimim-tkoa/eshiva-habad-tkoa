@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { routing } from '@/i18n/routing';
 import { Logo } from './Logo';
+import { Icon } from './Icons';
 
 const LOCALE_LABELS: Record<string, string> = { ru: 'RU', he: 'HE', en: 'EN' };
 
@@ -13,6 +14,7 @@ export function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     setTheme((localStorage.getItem('theme') as 'light' | 'dark' | null) ?? 'light');
@@ -37,92 +39,116 @@ export function Header() {
     { href: '/contacts', label: tr('contacts') },
   ];
 
+  const isActive = (href: string) =>
+    href === '/' ? pathname === '/' : pathname.startsWith(href);
+
   return (
-    <header
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
-        backdropFilter: 'blur(10px)',
-        background: 'color-mix(in oklab, var(--bg) 80%, transparent)',
-        borderBottom: '1px solid var(--border-soft)',
-      }}
-    >
-      <div
-        className="container-x"
-        style={{ display: 'flex', alignItems: 'center', gap: 16, height: 68 }}
-      >
-        <Link href="/" style={{ marginInlineEnd: 'auto' }}>
-          <Logo />
-        </Link>
-        <nav style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
-          {NAV.map((n) => {
-            const active = n.href === '/' ? pathname === '/' : pathname.startsWith(n.href);
-            return (
+    <>
+      <header className="header">
+        <div className="container header-inner">
+          <Link href="/" className="brand" aria-label="Ешива ХаБаД Ткоа">
+            <Logo />
+            <div>
+              <div className="brand-name">Ешива ХаБаД Ткоа</div>
+              <div className="brand-sub">Yeshiva · Tkoa · IL</div>
+            </div>
+          </Link>
+
+          <nav className="nav">
+            {NAV.map((n) => (
               <Link
                 key={n.href}
                 href={n.href}
-                style={{
-                  padding: '8px 14px',
-                  borderRadius: 999,
-                  fontSize: '0.9rem',
-                  fontWeight: 500,
-                  color: active ? 'var(--primary)' : 'var(--text-soft)',
-                  background: active ? 'var(--primary-soft)' : 'transparent',
-                }}
+                className={`nav-link ${isActive(n.href) ? 'active' : ''}`}
               >
                 {n.label}
               </Link>
-            );
-          })}
-          <Link
-            href="/donate"
-            className="btn btn-primary"
-            style={{ marginInlineStart: 8, padding: '8px 18px' }}
-          >
-            {tr('support')}
-          </Link>
-
-          {/* Переключатель языка */}
-          <div style={{ display: 'flex', gap: 2, marginInlineStart: 8 }}>
-            {routing.locales.map((l) => (
-              <button
-                key={l}
-                onClick={() => switchLocale(l)}
-                style={{
-                  padding: '6px 9px',
-                  borderRadius: 8,
-                  fontSize: '0.78rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  border: '1px solid var(--border)',
-                  background: l === locale ? 'var(--primary)' : 'var(--bg-elev)',
-                  color: l === locale ? '#fff' : 'var(--text-soft)',
-                }}
-              >
-                {LOCALE_LABELS[l]}
-              </button>
             ))}
-          </div>
+          </nav>
 
-          <button
-            onClick={toggleTheme}
-            aria-label="theme"
-            style={{
-              marginInlineStart: 8,
-              width: 38,
-              height: 38,
-              borderRadius: 999,
-              border: '1px solid var(--border)',
-              background: 'var(--bg-elev)',
-              color: 'var(--text)',
-              cursor: 'pointer',
-            }}
-          >
-            {theme === 'light' ? '🌙' : '☀'}
-          </button>
-        </nav>
-      </div>
-    </header>
+          <div className="header-side">
+            <div className="lang-switcher">
+              {routing.locales.map((l) => (
+                <button
+                  key={l}
+                  className={`lang-btn ${l === locale ? 'active' : ''}`}
+                  onClick={() => switchLocale(l)}
+                >
+                  {LOCALE_LABELS[l]}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={toggleTheme}
+              aria-label={theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
+            >
+              {theme === 'light' ? <Icon.moon /> : <Icon.sun />}
+            </button>
+
+            <Link href="/donate" className="donate-btn">
+              <Icon.heart />
+              <span>{tr('support')}</span>
+            </Link>
+
+            <button
+              type="button"
+              className="menu-toggle"
+              onClick={() => setMobileOpen(true)}
+              aria-label="Меню"
+            >
+              <Icon.menu />
+            </button>
+          </div>
+        </div>
+
+        <div className="yechi-banner" dir="rtl" lang="he" aria-label="Yechi Adoneinu">
+          <div className="container">
+            <div className="yechi-inner">
+              <span className="yechi-deco" aria-hidden>◆</span>
+              <span className="yechi-text">יחי אדוננו מורנו ורבינו מלך המשיח לעולם ועד</span>
+              <span className="yechi-deco" aria-hidden>◆</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {mobileOpen && (
+        <div className="mobile-nav">
+          <div className="mobile-nav-header">
+            <div className="brand">
+              <Logo />
+              <div className="brand-name">ХаБаД Ткоа</div>
+            </div>
+            <button
+              type="button"
+              className="menu-toggle"
+              style={{ display: 'inline-flex' }}
+              onClick={() => setMobileOpen(false)}
+              aria-label="Закрыть"
+            >
+              <Icon.close />
+            </button>
+          </div>
+          <div className="mobile-nav-list">
+            {NAV.map((n) => (
+              <Link
+                key={n.href}
+                href={n.href}
+                className={isActive(n.href) ? 'active' : ''}
+                onClick={() => setMobileOpen(false)}
+              >
+                {n.label}
+              </Link>
+            ))}
+            <Link href="/donate" onClick={() => setMobileOpen(false)}>
+              {tr('support')}
+            </Link>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

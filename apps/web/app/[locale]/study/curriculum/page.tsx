@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { apiGet, t } from '@/lib/api';
 import { PageHeader } from '@/components/PageHeader';
+import { CurriculumView, type SubjectCard } from '@/components/CurriculumView';
 import type { SubjectDto } from '@/lib/dto';
 import type { AppLocale } from '@/i18n/routing';
 
@@ -16,35 +17,31 @@ export default async function CurriculumPage({
   const tr = await getTranslations('curriculum');
   const subjects = await apiGet<SubjectDto[]>('/subjects', []);
 
+  const cards: SubjectCard[] = subjects.map((s) => ({
+    id: s.id,
+    code: s.code,
+    title: t(s.title, locale),
+    teacher: s.leadPerson ? t(s.leadPerson.name, locale) : '',
+    hours: s.hours,
+    color: s.color,
+    items: s.items.map((it) => t(it, locale)),
+  }));
+
   return (
     <>
       <PageHeader eyebrow={tr('eyebrow')} title={tr('title')} desc={tr('desc')} />
-      <section className="container-x" style={{ paddingBottom: 64, display: 'grid', gap: 20 }}>
-        {subjects.map((s) => (
-          <article key={s.id} className="card" style={{ padding: 28 }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, flexWrap: 'wrap' }}>
-              <span className="mono" style={{ color: 'var(--primary)', fontSize: '1.4rem' }}>
-                {s.code}
-              </span>
-              <h3 style={{ fontSize: '1.4rem' }}>{t(s.title, locale)}</h3>
-              <span style={{ color: 'var(--text-dim)', fontSize: '0.85rem' }}>{s.hours}</span>
-              {s.leadPerson && (
-                <span style={{ color: 'var(--text-soft)', fontSize: '0.85rem' }}>
-                  · {t(s.leadPerson.name, locale)}
-                </span>
-              )}
-            </div>
-            {s.items.length > 0 && (
-              <ul style={{ marginTop: 16, paddingInlineStart: 20, color: 'var(--text-soft)' }}>
-                {s.items.map((it, i) => (
-                  <li key={i} style={{ marginBottom: 6 }}>
-                    {t(it, locale)}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </article>
-        ))}
+      <section className="section" style={{ paddingTop: 0 }}>
+        <div className="container">
+          {cards.length > 0 ? (
+            <CurriculumView
+              subjects={cards}
+              contentLabel={tr('content')}
+              scheduleCta={tr('seeSchedule')}
+            />
+          ) : (
+            <p className="section-desc">{tr('empty')}</p>
+          )}
+        </div>
       </section>
     </>
   );

@@ -7,12 +7,30 @@ import type { AppLocale } from '@/i18n/routing';
 
 export const revalidate = 300;
 
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
 export default async function DonatePage({ params }: { params: Promise<{ locale: AppLocale }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const tr = await getTranslations('donate');
   const campaign = await apiGet<CampaignDto | null>('/campaign', null);
   const pct = campaign ? Math.round((campaign.raisedAmount / campaign.goalAmount) * 100) : 0;
+  const avg =
+    campaign && campaign.donorsCount > 0
+      ? Math.round(campaign.raisedAmount / campaign.donorsCount)
+      : 0;
+  const fmt = (n: number) => n.toLocaleString('ru-RU');
+  const dateFmt = new Intl.DateTimeFormat(locale === 'he' ? 'he-IL' : locale === 'en' ? 'en-US' : 'ru-RU', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 
   return (
     <>
@@ -21,62 +39,75 @@ export default async function DonatePage({ params }: { params: Promise<{ locale:
         title={campaign ? t(campaign.title, locale) : tr('titleFallback')}
         desc={tr('desc')}
       />
-      <section
-        className="container-x"
-        style={{
-          paddingBottom: 64,
-          display: 'grid',
-          gap: 24,
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        }}
-      >
-        <div style={{ display: 'grid', gap: 24, alignContent: 'start' }}>
+      <section className="section" style={{ paddingTop: 0 }}>
+        <div className="container-narrow">
           {campaign && (
-            <div className="card" style={{ padding: 28 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ fontSize: '1.6rem', fontWeight: 700 }}>
-                  {campaign.raisedAmount.toLocaleString()} ₪
-                </span>
-                <span style={{ color: 'var(--text-soft)' }}>
-                  {tr('of')} {campaign.goalAmount.toLocaleString()} ₪
-                </span>
+            <div className="donate-progress fade-up">
+              <div className="dp-header">
+                <div>
+                  <div className="dp-eyebrow mono">{tr('campaignLabel')}</div>
+                  <h2 className="dp-title">{tr('campaignGoal')}</h2>
+                </div>
               </div>
-              <div
-                style={{
-                  height: 12,
-                  borderRadius: 999,
-                  background: 'var(--bg-elev-2)',
-                  overflow: 'hidden',
-                  marginBottom: 12,
-                }}
-              >
-                <div style={{ width: `${pct}%`, height: '100%', background: 'var(--primary)' }} />
+
+              <div className="dp-bars">
+                <div className="dp-stat">
+                  <div className="dp-stat-l mono">{tr('collected')}</div>
+                  <div className="dp-stat-v">{fmt(campaign.raisedAmount)} ₪</div>
+                </div>
+                <div className="dp-stat dp-stat-right">
+                  <div className="dp-stat-l mono">{tr('goal')}</div>
+                  <div className="dp-stat-v dp-stat-goal">{fmt(campaign.goalAmount)} ₪</div>
+                </div>
               </div>
-              <div style={{ color: 'var(--text-soft)', fontSize: '0.9rem' }}>
-                {pct}% · {campaign.donorsCount} {tr('donors')}
+
+              <div className="dp-bar-track">
+                <div className="dp-bar-fill" style={{ width: `${pct}%` }}>
+                  <span className="dp-bar-pct mono">{pct}%</span>
+                </div>
+              </div>
+
+              <div className="dp-meta">
+                <span>
+                  <strong>{campaign.donorsCount}</strong> {tr('donors')}
+                </span>
+                {avg > 0 && (
+                  <>
+                    <span>·</span>
+                    <span>
+                      {tr('average')} — <strong>{fmt(avg)} ₪</strong>
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           )}
+
+          {campaign && <DonateForm campaignId={campaign.id} />}
+
           {campaign && campaign.donors.length > 0 && (
-            <div className="card" style={{ padding: 28 }}>
-              <h3 style={{ marginBottom: 16 }}>{tr('recentDonors')}</h3>
-              <div style={{ display: 'grid', gap: 10 }}>
+            <div className="donors-block fade-up fade-up-2">
+              <div className="donors-head">
+                <h3>{tr('recentDonors')}</h3>
+                <span className="mono">
+                  {campaign.donorsCount} {tr('donors')}
+                </span>
+              </div>
+              <div className="donors-list">
                 {campaign.donors.map((d) => (
-                  <div
-                    key={d.id}
-                    style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}
-                  >
-                    <span>{d.name}</span>
-                    <span className="mono" style={{ color: 'var(--primary)' }}>
-                      {d.amount.toLocaleString()} ₪
-                    </span>
+                  <div key={d.id} className="donor">
+                    <div className="donor-avatar">{initials(d.name)}</div>
+                    <div className="donor-info">
+                      <div className="donor-name">{d.name}</div>
+                      <div className="donor-date mono">{dateFmt.format(new Date(d.donatedAt))}</div>
+                    </div>
+                    <div className="donor-amt mono">{fmt(d.amount)} ₪</div>
                   </div>
                 ))}
               </div>
             </div>
           )}
         </div>
-        {campaign && <DonateForm campaignId={campaign.id} />}
       </section>
     </>
   );

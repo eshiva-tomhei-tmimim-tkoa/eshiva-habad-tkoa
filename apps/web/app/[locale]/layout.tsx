@@ -46,9 +46,11 @@ export default async function LocaleLayout({
       </head>
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <Header />
-          <main>{children}</main>
-          <Footer />
+          <div className="app-shell">
+            <Header />
+            <main>{children}</main>
+            <Footer />
+          </div>
         </NextIntlClientProvider>
       </body>
     </html>

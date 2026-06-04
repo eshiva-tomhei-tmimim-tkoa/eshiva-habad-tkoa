@@ -1,19 +1,9 @@
 'use client';
 import { useState, type FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
+import { Icon } from './Icons';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '12px 14px',
-  borderRadius: 10,
-  border: '1px solid var(--border)',
-  background: 'var(--bg-elev)',
-  color: 'var(--text)',
-  fontFamily: 'inherit',
-  fontSize: '0.95rem',
-};
 
 export function ContactForm() {
   const tr = useTranslations('contacts');
@@ -45,47 +35,57 @@ export function ContactForm() {
 
   if (status === 'ok') {
     return (
-      <div className="card" style={{ padding: 28 }}>
+      <div style={{ paddingTop: 8 }}>
         <h3 style={{ marginBottom: 8 }}>{tr('formThanks')}</h3>
-        <p style={{ color: 'var(--text-soft)' }}>{tr('formThanksDesc')}</p>
+        <p className="section-desc">{tr('formThanksDesc')}</p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="card" style={{ padding: 28, display: 'grid', gap: 14 }}>
-      <input
-        style={inputStyle}
-        placeholder={tr('formName')}
-        required
-        value={form.name}
-        onChange={(e) => setForm({ ...form, name: e.target.value })}
-      />
-      <input
-        style={inputStyle}
-        type="email"
-        placeholder={tr('formEmail')}
-        required
-        value={form.email}
-        onChange={(e) => setForm({ ...form, email: e.target.value })}
-      />
-      <input
-        style={inputStyle}
-        placeholder={tr('formPhone')}
-        value={form.phone}
-        onChange={(e) => setForm({ ...form, phone: e.target.value })}
-      />
-      <textarea
-        style={{ ...inputStyle, minHeight: 120, resize: 'vertical' }}
-        placeholder={tr('formMessage')}
-        required
-        value={form.message}
-        onChange={(e) => setForm({ ...form, message: e.target.value })}
-      />
-      {status === 'error' && <div style={{ color: '#e5484d' }}>{error}</div>}
-      <button type="submit" className="btn btn-primary" disabled={status === 'sending'}>
-        {status === 'sending' ? tr('formSending') : tr('formSend')}
-      </button>
+    <form className="form-grid" onSubmit={onSubmit}>
+      <label className="field">
+        <span className="field-l mono">{tr('formName')}</span>
+        <input
+          type="text"
+          required
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+        />
+      </label>
+      <label className="field">
+        <span className="field-l mono">{tr('formEmail')}</span>
+        <input
+          type="email"
+          required
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+        />
+      </label>
+      <label className="field field-full">
+        <span className="field-l mono">{tr('formPhone')}</span>
+        <input
+          type="text"
+          value={form.phone}
+          onChange={(e) => setForm({ ...form, phone: e.target.value })}
+        />
+      </label>
+      <label className="field field-full">
+        <span className="field-l mono">{tr('formMessage')}</span>
+        <textarea
+          rows={4}
+          required
+          value={form.message}
+          onChange={(e) => setForm({ ...form, message: e.target.value })}
+        />
+      </label>
+      {status === 'error' && <div className="field-full form-status-err">{error}</div>}
+      <div className="field-full" style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <button type="submit" className="btn btn-primary" disabled={status === 'sending'}>
+          <span>{status === 'sending' ? tr('formSending') : tr('formSend')}</span>
+          <span className="btn-arrow"><Icon.arrow /></span>
+        </button>
+      </div>
     </form>
   );
 }

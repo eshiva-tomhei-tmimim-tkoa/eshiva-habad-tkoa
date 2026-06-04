@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { apiGet, t } from '@/lib/api';
 import { PageHeader } from '@/components/PageHeader';
+import { ScheduleView, type ScheduleRow } from '@/components/ScheduleView';
 import { WEEKDAYS, type ScheduleSlotDto } from '@/lib/dto';
 import type { AppLocale } from '@/i18n/routing';
 
@@ -12,39 +13,32 @@ export default async function SchedulePage({ params }: { params: Promise<{ local
   const tr = await getTranslations('schedule');
   const slots = await apiGet<ScheduleSlotDto[]>('/schedule', []);
 
+  const rows: ScheduleRow[] = slots.map((s) => ({
+    id: s.id,
+    days: s.days,
+    start: s.startTime,
+    end: s.endTime,
+    subject: t(s.subject.title, locale),
+    teacher: t(s.person.name, locale),
+  }));
+
   return (
     <>
       <PageHeader eyebrow={tr('eyebrow')} title={tr('title')} desc={tr('desc')} />
-      <section className="container-x" style={{ paddingBottom: 64 }}>
-        <div className="card" style={{ overflow: 'hidden' }}>
-          {slots.map((s, i) => (
-            <div
-              key={s.id}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr 140px 120px',
-                gap: 16,
-                padding: '14px 20px',
-                borderTop: i === 0 ? 'none' : '1px solid var(--border-soft)',
-                alignItems: 'center',
-              }}
-            >
-              <div style={{ fontWeight: 600 }}>{t(s.subject.title, locale)}</div>
-              <div style={{ color: 'var(--text-soft)', fontSize: '0.9rem' }}>
-                {t(s.person.name, locale)}
-              </div>
-              <div className="mono" style={{ color: 'var(--primary)', fontSize: '0.9rem' }}>
-                {s.startTime}–{s.endTime}
-              </div>
-              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                {s.days.map((d) => (
-                  <span key={d} className="tag" style={{ padding: '2px 7px' }}>
-                    {WEEKDAYS[d]}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
+      <section className="section" style={{ paddingTop: 0 }}>
+        <div className="container">
+          <ScheduleView
+            slots={rows}
+            weekdays={WEEKDAYS}
+            labels={{
+              day: tr('day'),
+              all: tr('all'),
+              teacher: tr('teacher'),
+              allTeachers: tr('allTeachers'),
+              lessons: tr('lessons'),
+              empty: tr('empty'),
+            }}
+          />
         </div>
       </section>
     </>

@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { Icon } from './Icons';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 const PRESETS = [50, 100, 180, 360, 720, 1800];
@@ -33,47 +34,83 @@ export function DonateForm({ campaignId }: { campaignId: number }) {
   }
 
   return (
-    <div className="card" style={{ padding: 28 }}>
-      <h3 style={{ marginBottom: 16 }}>{tr('makeDonation')}</h3>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 10,
-          marginBottom: 16,
-        }}
-      >
+    <div className="donate-form">
+      <h3 className="donate-form-title">{tr('makeDonation')}</h3>
+
+      <div className="donate-toggle">
+        <button
+          type="button"
+          className={`donate-toggle-btn ${!recurring ? 'active' : ''}`}
+          onClick={() => setRecurring(false)}
+        >
+          {tr('oneTime')}
+        </button>
+        <button
+          type="button"
+          className={`donate-toggle-btn ${recurring ? 'active' : ''}`}
+          onClick={() => setRecurring(true)}
+        >
+          {tr('monthly')}
+        </button>
+      </div>
+
+      <div className="donate-presets">
         {PRESETS.map((p) => (
           <button
             key={p}
+            type="button"
+            className={`preset-btn ${amount === p ? 'active' : ''}`}
             onClick={() => setAmount(p)}
-            className="btn"
-            style={{
-              justifyContent: 'center',
-              border: '1px solid var(--border)',
-              background: amount === p ? 'var(--primary)' : 'transparent',
-              color: amount === p ? '#fff' : 'var(--text)',
-            }}
           >
-            {p} ₪
+            <span className="preset-amt">{p} ₪</span>
+            {p === 180 && <span className="preset-tag mono">{tr('hai')}</span>}
+            {p === 1800 && <span className="preset-tag mono">{tr('chai')}</span>}
           </button>
         ))}
       </div>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-        <input
-          type="checkbox"
-          checked={recurring}
-          onChange={(e) => setRecurring(e.target.checked)}
-        />
-        {tr('monthly')}
-      </label>
-      <button onClick={donate} className="btn btn-primary" disabled={status === 'sending'}>
-        {status === 'sending'
-          ? `${tr('redirecting')}…`
-          : `${tr('donate')} ${amount} ₪${recurring ? ` ${tr('perMonth')}` : ''}`}
+
+      <div className="donate-custom">
+        <span className="donate-custom-l mono">{tr('customAmount')}</span>
+        <div className="donate-input-wrap">
+          <input
+            type="number"
+            className="donate-input"
+            value={amount}
+            onChange={(e) => setAmount(Number(e.target.value) || 0)}
+          />
+          <span className="donate-currency">₪</span>
+        </div>
+      </div>
+
+      <div className="donate-impact">
+        <Icon.spark />
+        <div>
+          <strong>
+            {amount} ₪ {recurring ? tr('perMonth') : ''}
+          </strong>{' '}
+          {tr('impactCovers')} {Math.max(1, Math.floor(amount / 30))} {tr('impactHours')}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        className="btn btn-primary donate-cta"
+        onClick={donate}
+        disabled={status === 'sending'}
+      >
+        <span>
+          {status === 'sending'
+            ? `${tr('redirecting')}…`
+            : `${tr('donate')} ${amount} ₪${recurring ? ` ${tr('perMonth')}` : ''}`}
+        </span>
+        <span className="btn-arrow"><Icon.heart /></span>
       </button>
-      {status === 'error' && <div style={{ color: '#e5484d', marginTop: 8 }}>{error}</div>}
-      <p style={{ color: 'var(--text-dim)', fontSize: '0.8rem', marginTop: 16 }}>{tr('secure')}</p>
+
+      {status === 'error' && (
+        <div className="form-status-err" style={{ marginTop: 12 }}>{error}</div>
+      )}
+
+      <div className="donate-trust mono">{tr('secure')}</div>
     </div>
   );
 }
