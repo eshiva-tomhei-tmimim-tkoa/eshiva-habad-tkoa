@@ -1,0 +1,159 @@
+# Fast dev stack: исходники выполняются из Docker volume, а не из OneDrive bind-mount.
+# На старте workspace-sync копирует код в Linux volume, затем Compose Watch
+# синхронизирует изменения из рабочей папки.
+#
+# Запуск: docker compose -f docker-compose.fast.yml up --build --watch
+# Сброс только внутренней рабочей копии: docker compose -f docker-compose.fast.yml stop && docker volume rm yeshiva-fast_app_workspace
+
+name: yeshiva-fast
+
+x-app-volume: &app-volume
+  - app_workspace:/app
+
+x-dev-env: &dev-env
+  NODE_ENV: development
+  # Код лежит внутри Linux volume, поэтому polling больше не нужен.
+  WATCHPACK_POLLING: 'false'
+  CHOKIDAR_USEPOLLING: 'false'
+
+services:
+  workspace-sync:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: yeshiva-dev:latest
+    restart: 'no'
+    command: >
+      sh -c "rsync -a --delete
+      --exclude node_modules --exclude .next --exclude dist --exclude .turbo --exclude api/uploads
+      /host/apps/ /app/apps/
+      && rsync -a --delete
+      --exclude node_modules --exclude dist --exclude .turbo
+      /host/packages/ /app/packages/
+      && cp /host/package.json /host/pnpm-lock.yaml /host/pnpm-workspace.yaml /host/.npmrc /host/turbo.json /app/
+      && pnpm --filter @yeshiva/api exec prisma generate
+      && pnpm --filter @yeshiva/types build"
+    volumes:
+      - app_workspace:/app
+      - ./:/host:ro
+
+  workspace:
+    image: yeshiva-dev:latest
+    depends_on:
+      workspace-sync:
+        condition: service_completed_successfully
+    command: sh -c "sleep infinity"
+    volumes: *app-volume
+    develop:
+      watch:
+        - action: sync
+          path: ./apps
+          target: /app/apps
+          ignore:
+            - '**/node_modules'
+            - '**/.next'
+            - '**/dist'
+            - '**/.turbo'
+            - 'api/uploads'
+        - action: sync
+          path: ./packages
+          target: /app/packages
+          ignore:
+            - '**/node_modules'
+            - '**/dist'
+            - '**/.turbo'
+
+  mysql:
+    image: mysql:8.4
+    container_name: yeshiva-fast-mysql
+    restart: unless-stopped
+    ports:
+      - '3307:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: yeshiva_tkoa
+      MYSQL_USER: yeshiva
+      MYSQL_PASSWORD: yeshiva
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_fast_data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-proot']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  types:
+    image: yeshiva-dev:latest
+    restart: unless-stopped
+    depends_on:
+      workspace:
+        condition: service_started
+    command: pnpm --filter @yeshiva/types dev
+    environment:
+      <<: *dev-env
+    volumes: *app-volume
+
+  api:
+    image: yeshiva-dev:latest
+    restart: unless-stopped
+    depends_on:
+      workspace:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+    command: sh -c "pnpm --filter @yeshiva/api exec prisma migrate deploy && pnpm --filter @yeshiva/api dev"
+    environment:
+      <<: *dev-env
+      API_PORT: '4000'
+      DATABASE_URL: mysql://yeshiva:yeshiva@mysql:3306/yeshiva_tkoa
+      JWT_SECRET: dev-secret-change-me
+      CORS_ORIGINS: http://localhost:3000,http://localhost:3001
+      UPLOAD_DIR: /app/apps/api/uploads
+      WEB_REVALIDATE_URL: http://web:3000/api/revalidate
+      REVALIDATE_SECRET: dev-revalidate-secret
+      WEB_PUBLIC_URL: http://localhost:3000
+      TOREMET_PAY_URL: ${TOREMET_PAY_URL:-}
+    ports:
+      - '4000:4000'
+    volumes:
+      - app_workspace:/app
+      - api_fast_uploads:/app/apps/api/uploads
+
+  web:
+    image: yeshiva-dev:latest
+    restart: unless-stopped
+    depends_on: [workspace, api]
+    command: pnpm --filter @yeshiva/web dev
+    environment:
+      <<: *dev-env
+      PORT: '3000'
+      HOSTNAME: 0.0.0.0
+      NEXT_PUBLIC_API_URL: http://localhost:4000/api
+      API_INTERNAL_URL: http://api:4000/api
+      REVALIDATE_SECRET: dev-revalidate-secret
+      REVALIDATE_SECONDS: '300'
+    ports:
+      - '3000:3000'
+    volumes: *app-volume
+
+  admin:
+    image: yeshiva-dev:latest
+    restart: unless-stopped
+    depends_on: [workspace, api]
+    command: pnpm --filter @yeshiva/admin dev
+    environment:
+      <<: *dev-env
+      PORT: '3001'
+      HOSTNAME: 0.0.0.0
+      NEXT_PUBLIC_API_URL: http://localhost:4000/api
+    ports:
+      - '3001:3001'
+    volumes: *app-volume
+
+volumes:
+  app_workspace:
+  api_fast_uploads:
+  mysql_fast_data:

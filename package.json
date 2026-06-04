@@ -9,6 +9,9 @@
   },
   "scripts": {
     "dev": "turbo run dev",
+    "dev:docker": "docker compose -f docker-compose.dev.yml up --build",
+    "dev:docker:fast": "docker compose -f docker-compose.fast.yml up --build --watch",
+    "dev:docker:fast:reset": "docker compose -f docker-compose.fast.yml stop && docker volume rm yeshiva-fast_app_workspace",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",

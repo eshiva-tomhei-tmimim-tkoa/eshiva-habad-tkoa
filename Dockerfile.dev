@@ -3,7 +3,7 @@
 # (.next, node_modules, dist) жили в томах на ext4, а не на синхронизируемом
 # OneDrive (там Next падает на readlink EINVAL). Исходники — bind-mount.
 FROM node:22-alpine
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat rsync
 RUN corepack enable
 WORKDIR /app
 
