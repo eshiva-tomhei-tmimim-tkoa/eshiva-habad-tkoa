@@ -32,7 +32,14 @@ export function DonateThanks() {
     fetch(`${API_URL}/donations/confirm`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ campaignId, externalId, amount, name, showInList: true }),
+      body: JSON.stringify({
+        campaignId,
+        externalId,
+        amount,
+        ...(/^[A-Za-z]{3}$/.test(currency) ? { currency } : {}),
+        name,
+        showInList: true,
+      }),
     })
       .then(() => setReady(true))
       .catch(() => setReady(true));

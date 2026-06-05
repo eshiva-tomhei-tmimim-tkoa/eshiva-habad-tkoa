@@ -27,9 +27,13 @@ import { apiBase } from '../lib/api';
 const TARGETS = [
   { key: 'name', label: 'Имя', required: true },
   { key: 'amount', label: 'Сумма', required: true },
+  { key: 'currency', label: 'Валюта', required: false },
   { key: 'donatedAt', label: 'Дата', required: true },
   { key: 'externalId', label: 'Внешний ID (дедуп)', required: false },
 ] as const;
+
+// Частые валюты для «значения по умолчанию», когда столбца валюты в файле нет.
+const COMMON_CURRENCIES = ['ILS', 'USD', 'EUR', 'RUB', 'GBP', 'UAH'];
 
 type TargetKey = (typeof TARGETS)[number]['key'];
 
@@ -112,9 +116,11 @@ export function DonorImport({
   const [mapping, setMapping] = useState<Record<TargetKey, string>>({
     name: '',
     amount: '',
+    currency: '',
     donatedAt: '',
     externalId: '',
   });
+  const [defaultCurrency, setDefaultCurrency] = useState('ILS');
 
   const [committing, setCommitting] = useState(false);
   const [result, setResult] = useState<CommitResult | null>(null);
@@ -144,6 +150,7 @@ export function DonorImport({
       setMapping({
         name: data.guess.name ?? '',
         amount: data.guess.amount ?? '',
+        currency: data.guess.currency ?? '',
         donatedAt: data.guess.donatedAt ?? '',
         externalId: data.guess.externalId ?? '',
       });
@@ -162,18 +169,25 @@ export function DonorImport({
 
   // Построить нормализованные строки + статистику пропусков (на клиенте).
   const prepared = useMemo(() => {
-    if (!parsed) return { donors: [], invalid: 0 };
-    const donors: {
+    type Prepared = {
       name: string;
       amount: number;
+      currency: string;
       donatedAt: string;
       externalId?: string;
-    }[] = [];
+    };
+    if (!parsed) return { donors: [] as Prepared[], invalid: 0 };
+    const donors: Prepared[] = [];
     let invalid = 0;
+    const normCur = (v: unknown): string => {
+      const c = String(v ?? '').trim().toUpperCase();
+      return /^[A-Z]{3}$/.test(c) ? c : '';
+    };
     for (const row of parsed.rows) {
       const name = mapping.name ? String(row[mapping.name] ?? '').trim() : '';
       const amount = mapping.amount ? parseAmount(row[mapping.amount]) : NaN;
       const donatedAt = mapping.donatedAt ? parseDate(row[mapping.donatedAt]) : null;
+      const currency = (mapping.currency ? normCur(row[mapping.currency]) : '') || defaultCurrency;
       const externalId =
         mapping.externalId && row[mapping.externalId] != null
           ? String(row[mapping.externalId]).trim().slice(0, 64)
@@ -182,10 +196,10 @@ export function DonorImport({
         invalid += 1;
         continue;
       }
-      donors.push({ name, amount, donatedAt, ...(externalId ? { externalId } : {}) });
+      donors.push({ name, amount, currency, donatedAt, ...(externalId ? { externalId } : {}) });
     }
     return { donors, invalid };
-  }, [parsed, mapping]);
+  }, [parsed, mapping, defaultCurrency]);
 
   const canImport =
     !!parsed && mapping.name && mapping.amount && mapping.donatedAt && campaignId !== '' && prepared.donors.length > 0;
@@ -298,6 +312,22 @@ export function DonorImport({
                     </TextField>
                   ))}
                 </Stack>
+
+                <TextField
+                  select
+                  label="Валюта по умолчанию (если столбца нет/пуст)"
+                  value={defaultCurrency}
+                  onChange={(e) => setDefaultCurrency(e.target.value)}
+                  size="small"
+                  sx={{ maxWidth: 320 }}
+                  helperText="Сумма каждого донора будет сконвертирована в ₪ по курсу на момент импорта"
+                >
+                  {COMMON_CURRENCIES.map((c) => (
+                    <MenuItem key={c} value={c}>
+                      {c}
+                    </MenuItem>
+                  ))}
+                </TextField>
 
                 <Alert severity={prepared.invalid > 0 ? 'warning' : 'info'}>
                   К импорту готово строк: <b>{prepared.donors.length}</b>

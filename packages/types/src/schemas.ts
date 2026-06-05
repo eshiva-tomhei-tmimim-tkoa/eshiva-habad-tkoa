@@ -20,6 +20,13 @@ export const timeStringSchema = z
   .string()
   .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Ожидается время в формате HH:MM');
 
+/** Код валюты ISO 4217 (3 буквы), приводится к верхнему регистру. */
+export const currencyCodeSchema = z
+  .string()
+  .trim()
+  .regex(/^[A-Za-z]{3}$/, 'Ожидается код валюты из 3 букв (ISO 4217)')
+  .transform((s) => s.toUpperCase());
+
 // ---------- Публичные формы ----------
 
 /** POST /api/contact */
@@ -51,6 +58,7 @@ export const donationConfirmSchema = z.object({
   campaignId: z.number().int().positive(),
   externalId: z.string().min(1).max(64),
   amount: z.number().positive(),
+  currency: currencyCodeSchema.optional().default('ILS'),
   name: z.string().max(128).optional(),
   showInList: z.boolean().default(true),
 });
@@ -146,6 +154,7 @@ export const donorInputSchema = z.object({
   campaignId: z.number().int().positive(),
   name: z.string().min(1).max(128),
   amount: z.number().positive(),
+  currency: currencyCodeSchema.default('ILS'),
   donatedAt: z.string().datetime().or(z.string().date()),
   isAnonymous: z.boolean().default(false),
 });
@@ -160,6 +169,7 @@ export type DonorInput = z.infer<typeof donorInputSchema>;
 export const donorImportRowSchema = z.object({
   name: z.string().min(1).max(128),
   amount: z.number().positive(),
+  currency: currencyCodeSchema.optional().default('ILS'),
   donatedAt: z.string().datetime().or(z.string().date()),
   isAnonymous: z.boolean().optional().default(false),
   externalId: z.string().max(64).optional(),

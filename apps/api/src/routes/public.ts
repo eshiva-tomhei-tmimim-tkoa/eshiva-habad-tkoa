@@ -6,6 +6,7 @@ import { num, dec, loc, locArray, dayArray, timeHHMM } from '../lib/serialize.js
 import { flattenZod } from '../lib/validate.js';
 import { buildDonationUrl, isToremetConfigured } from '../lib/toremet.js';
 import { triggerRevalidate } from '../lib/revalidate.js';
+import { ensureRates, convertToIls } from '../lib/fx.js';
 
 export const publicRouter: Router = Router();
 
@@ -203,6 +204,8 @@ publicRouter.get(
         id: num(d.id),
         name: d.isAnonymous ? 'Аноним' : d.name,
         amount: dec(d.amount),
+        currency: d.currency,
+        amountIls: d.amountIls != null ? dec(d.amountIls) : null,
         donatedAt: d.donatedAt.toISOString(),
         isAnonymous: d.isAnonymous,
       })),
@@ -288,7 +291,7 @@ publicRouter.post(
       sendError(res, 422, 'VALIDATION', 'Проверьте данные пожертвования', flattenZod(parsed.error));
       return;
     }
-    const { campaignId, externalId, amount, name, showInList } = parsed.data;
+    const { campaignId, externalId, amount, currency, name, showInList } = parsed.data;
 
     const campaign = await prisma.campaign.findUnique({ where: { id: BigInt(campaignId) } });
     if (!campaign) {
@@ -306,6 +309,11 @@ publicRouter.post(
     const trimmed = (name ?? '').trim();
     const isAnonymous = !showInList || trimmed.length === 0;
 
+    // Конвертация в шекели: сбор кампании ведётся в ILS.
+    await ensureRates();
+    const amountIls = convertToIls(amount, currency);
+    const ilsValue = amountIls ?? amount; // нет курса → считаем 1:1 (best effort)
+
     // Транзакция: создать донора и увеличить собранную сумму кампании.
     const donor = await prisma.$transaction(async (tx) => {
       const created = await tx.donor.create({
@@ -313,6 +321,8 @@ publicRouter.post(
           campaignId: campaign.id,
           name: isAnonymous ? 'Аноним' : trimmed,
           amount,
+          currency,
+          amountIls,
           donatedAt: new Date(),
           isAnonymous,
           isPublic: showInList,
@@ -322,7 +332,7 @@ publicRouter.post(
       });
       await tx.campaign.update({
         where: { id: campaign.id },
-        data: { raisedAmount: { increment: amount } },
+        data: { raisedAmount: { increment: ilsValue } },
       });
       return created;
     });

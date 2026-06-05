@@ -26,6 +26,7 @@ import { requireAuth, requireRole } from '../lib/auth.js';
 import { flattenZod } from '../lib/validate.js';
 import { num, dec, loc, locArray, dayArray, timeHHMM } from '../lib/serialize.js';
 import { triggerRevalidate } from '../lib/revalidate.js';
+import { ensureRates, convertToIls } from '../lib/fx.js';
 
 export const adminRouter: Router = Router();
 
@@ -311,6 +312,7 @@ function guessMapping(headers: string[]): Record<string, string | null> {
   return {
     name: find(/(^|[^a-z])(name|имя|donor|жертвовател|full.?name|first.?name|contact|фио)/i),
     amount: find(/(amount|sum|сумма|total|итог|donation|payment|paid|оплат|gift|взнос|net)/i),
+    currency: find(/(currency|валют|^cur$|cur\.|iso|code)/i),
     donatedAt: find(/(date|дата|time|время|created|paid|payment.?date|donated|когда)/i),
     externalId: find(/(transaction|trans|donid|order|reference|^ref$|confirmation|receipt|чек|квитан|external)/i),
   };
@@ -377,6 +379,8 @@ adminRouter.post(
       sendError(res, 404, 'NOT_FOUND', 'Кампания не найдена');
       return;
     }
+    // Подтянуть актуальные курсы перед массовой конвертацией.
+    await ensureRates();
 
     // Существующие записи кампании — для дедупа (один запрос).
     const existing = await prisma.donor.findMany({
@@ -396,10 +400,13 @@ adminRouter.post(
 
     for (const d of parsed.data.donors) {
       const donatedAt = new Date(d.donatedAt);
+      const currency = (d.currency ?? 'ILS').toUpperCase();
       const base = {
         campaignId,
         name: d.name.trim(),
         amount: d.amount,
+        currency,
+        amountIls: convertToIls(d.amount, currency),
         donatedAt,
         isAnonymous: d.isAnonymous ?? false,
         provider: 'import',
@@ -409,7 +416,14 @@ adminRouter.post(
         if (seenExternal.has(d.externalId)) {
           await prisma.donor.update({
             where: { externalId: d.externalId },
-            data: { name: base.name, amount: base.amount, donatedAt, isAnonymous: base.isAnonymous },
+            data: {
+              name: base.name,
+              amount: base.amount,
+              currency: base.currency,
+              amountIls: base.amountIls,
+              donatedAt,
+              isAnonymous: base.isAnonymous,
+            },
           });
           updated += 1;
         } else {
@@ -443,18 +457,26 @@ adminRouter.use(
     model: prisma.donor as unknown as PrismaDelegate,
     createSchema: donorInputSchema,
     findManyArgs: { orderBy: { donatedAt: 'desc' } },
-    toData: (i) => ({
-      campaignId: BigInt(i.campaignId as number),
-      name: i.name,
-      amount: i.amount,
-      donatedAt: new Date(i.donatedAt as string),
-      isAnonymous: i.isAnonymous ?? false,
-    }),
+    toData: (i) => {
+      const currency = ((i.currency as string) ?? 'ILS').toUpperCase();
+      const amount = i.amount as number;
+      return {
+        campaignId: BigInt(i.campaignId as number),
+        name: i.name,
+        amount,
+        currency,
+        amountIls: convertToIls(amount, currency),
+        donatedAt: new Date(i.donatedAt as string),
+        isAnonymous: i.isAnonymous ?? false,
+      };
+    },
     toDto: (r) => ({
       id: num(r.id as bigint),
       campaignId: num(r.campaignId as bigint),
       name: r.name,
       amount: dec(r.amount as never),
+      currency: r.currency ?? 'ILS',
+      amountIls: r.amountIls != null ? dec(r.amountIls as never) : null,
       donatedAt: (r.donatedAt as Date).toISOString(),
       isAnonymous: r.isAnonymous,
     }),

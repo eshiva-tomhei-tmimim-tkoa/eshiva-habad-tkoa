@@ -238,7 +238,14 @@ export const ENTITIES: EntityDef[] = [
     endpoint: '/admin/donors',
     columns: [
       { field: 'name', header: 'Имя', value: (r) => String(r.name ?? ''), width: 200 },
-      { field: 'amount', header: 'Сумма', value: (r) => String(r.amount ?? ''), width: 120 },
+      { field: 'amount', header: 'Сумма', value: (r) => String(r.amount ?? ''), width: 100 },
+      { field: 'currency', header: 'Валюта', value: (r) => String(r.currency ?? 'ILS'), width: 90 },
+      {
+        field: 'amountIls',
+        header: 'В шекелях (₪)',
+        value: (r) => (r.amountIls == null ? '—' : String(r.amountIls)),
+        width: 130,
+      },
       {
         field: 'donatedAt',
         header: 'Дата',
@@ -250,6 +257,7 @@ export const ENTITIES: EntityDef[] = [
       { type: 'number', key: 'campaignId', label: 'ID кампании' },
       { type: 'text', key: 'name', label: 'Имя (или «Аноним»)', required: true },
       { type: 'number', key: 'amount', label: 'Сумма' },
+      { type: 'text', key: 'currency', label: 'Валюта (ISO: ILS/USD/EUR…)' },
       { type: 'text', key: 'donatedAt', label: 'Дата (YYYY-MM-DD)' },
       { type: 'boolean', key: 'isAnonymous', label: 'Аноним' },
     ],

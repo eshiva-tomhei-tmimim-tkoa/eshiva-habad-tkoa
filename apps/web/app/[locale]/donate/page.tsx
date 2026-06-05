@@ -101,7 +101,15 @@ export default async function DonatePage({ params }: { params: Promise<{ locale:
                       <div className="donor-name">{d.name}</div>
                       <div className="donor-date mono">{dateFmt.format(new Date(d.donatedAt))}</div>
                     </div>
-                    <div className="donor-amt mono">{fmt(d.amount)} ₪</div>
+                    <div className="donor-amt mono">
+                      {fmt(d.amountIls ?? d.amount)} ₪
+                      {d.currency !== 'ILS' && (
+                        <span style={{ color: 'var(--text-dim)', fontWeight: 400 }}>
+                          {' '}
+                          ({fmt(d.amount)} {d.currency})
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

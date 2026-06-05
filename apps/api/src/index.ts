@@ -9,6 +9,7 @@ import { publicRouter } from './routes/public.js';
 import { authRouter } from './routes/auth.js';
 import { adminRouter } from './routes/admin.js';
 import { sendError } from './lib/respond.js';
+import { ensureRates } from './lib/fx.js';
 
 const app = express();
 const port = Number(process.env.API_PORT ?? 4000);
@@ -54,4 +55,6 @@ app.use(errorHandler);
 
 app.listen(port, () => {
   console.log(`[api] listening on http://localhost:${port}/api`);
+  // Прогрев кэша валютных курсов (не блокирует старт).
+  void ensureRates();
 });

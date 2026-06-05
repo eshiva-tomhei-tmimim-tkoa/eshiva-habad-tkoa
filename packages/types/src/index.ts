@@ -112,6 +112,10 @@ export interface Donor {
   campaignId: number;
   name: string;
   amount: number;
+  /** Валюта оригинального пожертвования (ISO 4217). */
+  currency: string;
+  /** Сумма в шекелях на момент записи (null — конвертация была недоступна). */
+  amountIls: number | null;
   donatedAt: string;
   isAnonymous: boolean;
 }

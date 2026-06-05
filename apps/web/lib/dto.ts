@@ -54,7 +54,14 @@ export interface CampaignDto {
   raisedAmount: number;
   currency: string;
   donorsCount: number;
-  donors: { id: number; name: string; amount: number; donatedAt: string }[];
+  donors: {
+    id: number;
+    name: string;
+    amount: number;
+    currency: string;
+    amountIls: number | null;
+    donatedAt: string;
+  }[];
 }
 
 export const CATEGORY_LABELS: Record<DailyBlockDto['category'], string> = {
