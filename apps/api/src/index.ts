@@ -18,7 +18,8 @@ const corsOrigins = (process.env.CORS_ORIGINS ?? 'http://localhost:3000,http://l
 const uploadDir = path.resolve(process.env.UPLOAD_DIR ?? './uploads');
 
 app.use(cors({ origin: corsOrigins, credentials: true }));
-app.use(express.json());
+// Лимит увеличен для массового импорта доноров (commit присылает все строки).
+app.use(express.json({ limit: '20mb' }));
 app.use(cookieParser());
 
 // Загруженные фото (этап 3: admin upload).

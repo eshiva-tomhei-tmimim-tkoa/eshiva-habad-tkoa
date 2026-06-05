@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import path from 'node:path';
 import fs from 'node:fs';
 import multer from 'multer';
+import * as XLSX from 'xlsx';
 import type { ZodTypeAny } from 'zod';
 import {
   personInputSchema,
@@ -14,6 +15,7 @@ import {
   dailyBlockInputSchema,
   siteContentInputSchema,
   donorInputSchema,
+  donorImportCommitSchema,
   campaignInputSchema,
   reorderSchema,
   idSetSchema,
@@ -271,6 +273,166 @@ adminRouter.use(
       value: loc(r.value as never),
       pageGroup: r.pageGroup,
     }),
+  }),
+);
+
+// ---------------------------------------------------------------------------
+// Кампании (список) — нужен для выбора цели импорта доноров.
+// ---------------------------------------------------------------------------
+adminRouter.get(
+  '/campaigns',
+  asyncHandler(async (_req, res) => {
+    const rows = await prisma.campaign.findMany({ orderBy: [{ isActive: 'desc' }, { id: 'desc' }] });
+    sendData(
+      res,
+      rows.map((c) => ({
+        id: num(c.id),
+        title: loc(c.title as never),
+        currency: c.currency,
+        isActive: c.isActive,
+      })),
+      { count: rows.length },
+    );
+  }),
+);
+
+// ---------------------------------------------------------------------------
+// Импорт доноров из Excel/CSV (в т.ч. файлов, выгруженных из Wix).
+// Двухшаговый: parse (разбор файла + угадывание колонок) → commit (вставка).
+// ---------------------------------------------------------------------------
+const importUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024 },
+});
+
+/** Эвристическое сопоставление заголовка файла с полем донора. */
+function guessMapping(headers: string[]): Record<string, string | null> {
+  const find = (re: RegExp) => headers.find((h) => re.test(h.trim())) ?? null;
+  return {
+    name: find(/(^|[^a-z])(name|имя|donor|жертвовател|full.?name|first.?name|contact|фио)/i),
+    amount: find(/(amount|sum|сумма|total|итог|donation|payment|paid|оплат|gift|взнос|net)/i),
+    donatedAt: find(/(date|дата|time|время|created|paid|payment.?date|donated|когда)/i),
+    externalId: find(/(transaction|trans|donid|order|reference|^ref$|confirmation|receipt|чек|квитан|external)/i),
+  };
+}
+
+// POST /api/admin/donors/import/parse — разобрать загруженный файл.
+adminRouter.post(
+  '/donors/import/parse',
+  requireRole('admin', 'editor'),
+  importUpload.single('file'),
+  asyncHandler(async (req, res) => {
+    if (!req.file) {
+      sendError(res, 422, 'VALIDATION', 'Файл не получен (поле file: .xlsx/.xls/.csv)');
+      return;
+    }
+    let wb: XLSX.WorkBook;
+    try {
+      wb = XLSX.read(req.file.buffer, { type: 'buffer', cellDates: true });
+    } catch {
+      sendError(res, 422, 'PARSE', 'Не удалось прочитать файл — ожидается .xlsx/.xls/.csv');
+      return;
+    }
+    const sheetName = wb.SheetNames[0];
+    const sheet = sheetName ? wb.Sheets[sheetName] : undefined;
+    if (!sheet) {
+      sendError(res, 422, 'PARSE', 'В файле нет листов с данными');
+      return;
+    }
+    const aoa = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '' });
+    const headerRow = ((aoa[0] as unknown[]) ?? [])
+      .map((h) => String(h ?? '').trim())
+      .filter((h) => h.length > 0);
+    if (headerRow.length === 0) {
+      sendError(res, 422, 'PARSE', 'В первой строке файла нет заголовков колонок');
+      return;
+    }
+    // Объекты по заголовкам; даты — JS Date (cellDates) → ISO в JSON.
+    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: null });
+    const capped = rows.slice(0, 20000);
+
+    sendData(res, {
+      sheetName,
+      headers: headerRow,
+      guess: guessMapping(headerRow),
+      rows: capped,
+      totalRows: rows.length,
+    });
+  }),
+);
+
+// POST /api/admin/donors/import/commit — вставить сопоставленные строки.
+adminRouter.post(
+  '/donors/import/commit',
+  requireRole('admin', 'editor'),
+  asyncHandler(async (req, res) => {
+    const parsed = donorImportCommitSchema.safeParse(req.body);
+    if (!parsed.success) {
+      sendError(res, 422, 'VALIDATION', 'Проверьте данные импорта', flattenZod(parsed.error));
+      return;
+    }
+    const campaignId = BigInt(parsed.data.campaignId);
+    const campaign = await prisma.campaign.findUnique({ where: { id: campaignId } });
+    if (!campaign) {
+      sendError(res, 404, 'NOT_FOUND', 'Кампания не найдена');
+      return;
+    }
+
+    // Существующие записи кампании — для дедупа (один запрос).
+    const existing = await prisma.donor.findMany({
+      where: { campaignId },
+      select: { name: true, amount: true, donatedAt: true, externalId: true },
+    });
+    const dayKey = (name: string, amount: number, d: Date) =>
+      `${name.trim().toLowerCase()}|${amount}|${d.toISOString().slice(0, 10)}`;
+    const seenExternal = new Set(existing.filter((e) => e.externalId).map((e) => e.externalId!));
+    const seenKeys = new Set(
+      existing.map((e) => dayKey(e.name, Number(e.amount), e.donatedAt)),
+    );
+
+    let inserted = 0;
+    let updated = 0;
+    let skipped = 0;
+
+    for (const d of parsed.data.donors) {
+      const donatedAt = new Date(d.donatedAt);
+      const base = {
+        campaignId,
+        name: d.name.trim(),
+        amount: d.amount,
+        donatedAt,
+        isAnonymous: d.isAnonymous ?? false,
+        provider: 'import',
+      };
+
+      if (d.externalId) {
+        if (seenExternal.has(d.externalId)) {
+          await prisma.donor.update({
+            where: { externalId: d.externalId },
+            data: { name: base.name, amount: base.amount, donatedAt, isAnonymous: base.isAnonymous },
+          });
+          updated += 1;
+        } else {
+          await prisma.donor.create({ data: { ...base, externalId: d.externalId } });
+          seenExternal.add(d.externalId);
+          seenKeys.add(dayKey(base.name, base.amount, donatedAt));
+          inserted += 1;
+        }
+        continue;
+      }
+
+      // Без внешнего id — дедуп по имя+сумма+дата.
+      const key = dayKey(base.name, base.amount, donatedAt);
+      if (seenKeys.has(key)) {
+        skipped += 1;
+        continue;
+      }
+      await prisma.donor.create({ data: base });
+      seenKeys.add(key);
+      inserted += 1;
+    }
+
+    sendData(res, { inserted, updated, skipped, total: parsed.data.donors.length });
   }),
 );
 

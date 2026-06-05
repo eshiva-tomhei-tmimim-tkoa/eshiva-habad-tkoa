@@ -15,8 +15,10 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { DashboardShell } from '../../components/DashboardShell';
 import { EntityForm } from '../../components/EntityForm';
+import { DonorImport } from '../../components/DonorImport';
 import { ENTITY_MAP } from '../../lib/entities';
 import { api } from '../../lib/api';
+import { exportRowsToXlsx } from '../../lib/excel';
 
 type Row = Record<string, unknown>;
 
@@ -28,6 +30,7 @@ export default function EntityPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editing, setEditing] = useState<Row | null | undefined>(undefined); // undefined = закрыто
+  const [importing, setImporting] = useState(false);
 
   const reload = useCallback(() => {
     if (!def) return;
@@ -91,9 +94,23 @@ export default function EntityPage() {
     <DashboardShell>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
         <Typography variant="h4">{def.title}</Typography>
-        <Button variant="contained" onClick={() => setEditing(null)}>
-          Создать
-        </Button>
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="outlined"
+            onClick={() => exportRowsToXlsx(def.key, def.columns, rows)}
+            disabled={loading || rows.length === 0}
+          >
+            Экспорт в Excel
+          </Button>
+          {def.key === 'donors' && (
+            <Button variant="outlined" onClick={() => setImporting(true)}>
+              Импорт из Excel / Wix
+            </Button>
+          )}
+          <Button variant="contained" onClick={() => setEditing(null)}>
+            Создать
+          </Button>
+        </Stack>
       </Stack>
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
@@ -125,6 +142,12 @@ export default function EntityPage() {
             setEditing(undefined);
             reload();
           }}
+        />
+      )}
+      {importing && (
+        <DonorImport
+          onClose={() => setImporting(false)}
+          onImported={() => reload()}
         />
       )}
     </DashboardShell>

@@ -151,6 +151,27 @@ export const donorInputSchema = z.object({
 });
 export type DonorInput = z.infer<typeof donorInputSchema>;
 
+/**
+ * POST /api/admin/donors/import/commit — массовый импорт доноров из Excel/CSV
+ * (в т.ч. файлов, выгруженных из Wix). Клиент уже сопоставил колонки файла с
+ * полями донора и прислал нормализованные строки.
+ * Дедуп на сервере: по externalId (если есть), иначе по имя+сумма+дата.
+ */
+export const donorImportRowSchema = z.object({
+  name: z.string().min(1).max(128),
+  amount: z.number().positive(),
+  donatedAt: z.string().datetime().or(z.string().date()),
+  isAnonymous: z.boolean().optional().default(false),
+  externalId: z.string().max(64).optional(),
+});
+export type DonorImportRow = z.infer<typeof donorImportRowSchema>;
+
+export const donorImportCommitSchema = z.object({
+  campaignId: z.number().int().positive(),
+  donors: z.array(donorImportRowSchema).min(1).max(20000),
+});
+export type DonorImportCommit = z.infer<typeof donorImportCommitSchema>;
+
 export const campaignInputSchema = z.object({
   title: localizedSchema,
   goalAmount: z.number().nonnegative(),
