@@ -10,8 +10,10 @@
   "scripts": {
     "dev": "turbo run dev",
     "dev:docker": "docker compose -f docker-compose.dev.yml up --build",
-    "dev:docker:fast": "docker compose -f docker-compose.fast.yml up --build --watch",
+    "dev:docker:fast": "docker compose -f docker-compose.fast.yml up --watch",
+    "dev:docker:fast:build": "docker compose -f docker-compose.fast.yml build",
     "dev:docker:fast:reset": "docker compose -f docker-compose.fast.yml stop && docker volume rm yeshiva-fast_app_workspace",
+    "db:seed:docker:fast": "docker compose -f docker-compose.fast.yml exec api pnpm --filter @yeshiva/api db:seed",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",

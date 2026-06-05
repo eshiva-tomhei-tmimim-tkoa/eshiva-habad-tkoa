@@ -2,7 +2,7 @@
 # На старте workspace-sync копирует код в Linux volume, затем Compose Watch
 # синхронизирует изменения из рабочей папки.
 #
-# Запуск: docker compose -f docker-compose.fast.yml up --build --watch
+# Запуск: docker compose -f docker-compose.fast.yml up --watch
 # Сброс только внутренней рабочей копии: docker compose -f docker-compose.fast.yml stop && docker volume rm yeshiva-fast_app_workspace
 
 name: yeshiva-fast
@@ -31,6 +31,7 @@ services:
       --exclude node_modules --exclude dist --exclude .turbo
       /host/packages/ /app/packages/
       && cp /host/package.json /host/pnpm-lock.yaml /host/pnpm-workspace.yaml /host/.npmrc /host/turbo.json /app/
+      && pnpm install --frozen-lockfile
       && pnpm --filter @yeshiva/api exec prisma generate
       && pnpm --filter @yeshiva/types build"
     volumes:
