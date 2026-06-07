@@ -1,0 +1,31 @@
+# Вариант A — деплой РЯДОМ с уже работающим стеком на том же VPS, чей nginx
+# (в Docker-контейнере) держит порты 80/443.
+#
+# Идея: публичные сервисы (web/admin/yeshiva-api) дополнительно подключаются к
+# ВНЕШНЕЙ сети `web_edge`. В эту же сеть добавляется существующий nginx и
+# проксирует к ним по имени сервиса. Внутренняя БД (mysql) остаётся только во
+# внутренней сети `default` и наружу/в чужой стек не видна. Caddy НЕ запускаем.
+#
+# Подготовка (один раз):
+#   docker network create web_edge
+#
+# Запуск (caddy намеренно не указываем):
+#   docker compose -p yeshiva \
+#     -f docker-compose.prod.yml \
+#     -f deploy/docker-compose.prod.edge.yml \
+#     --env-file .env.prod \
+#     up -d --build mysql yeshiva-api web admin
+networks:
+  default: {}
+  web_edge:
+    external: true
+
+services:
+  yeshiva-api:
+    networks: [default, web_edge]
+
+  web:
+    networks: [default, web_edge]
+
+  admin:
+    networks: [default, web_edge]
