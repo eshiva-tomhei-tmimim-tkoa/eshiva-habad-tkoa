@@ -182,6 +182,24 @@ export const donorImportCommitSchema = z.object({
 });
 export type DonorImportCommit = z.infer<typeof donorImportCommitSchema>;
 
+export const organizationInputSchema = z.object({
+  brandName: localizedSchema,
+  brandSub: z.string().max(64),
+  yechiText: z.string().max(512),
+  address: localizedSchema,
+  phoneMain: z.string().min(1).max(32),
+  phoneSecondary: z.string().max(32).nullable().optional(),
+  email: z.string().email().max(128),
+  mapLat: z.number().min(-90).max(90),
+  mapLng: z.number().min(-180).max(180),
+  hoursWeekday: z.string().max(32),
+  hoursFriday: localizedSchema,
+  hoursShabbat: localizedSchema,
+  legalStatus: z.string().max(64),
+  copyrightSuffix: localizedSchema,
+});
+export type OrganizationInput = z.infer<typeof organizationInputSchema>;
+
 export const campaignInputSchema = z.object({
   title: localizedSchema,
   goalAmount: z.number().nonnegative(),

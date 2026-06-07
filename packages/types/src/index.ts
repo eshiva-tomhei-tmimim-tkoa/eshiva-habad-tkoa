@@ -139,6 +139,25 @@ export interface SiteContent {
   pageGroup: string;
 }
 
+/** Реквизиты ешивы (organization, singleton id=1). */
+export interface Organization {
+  brandName: Localized;
+  brandSub: string;
+  yechiText: string;
+  address: Localized;
+  phoneMain: string;
+  phoneSecondary: string | null;
+  email: string;
+  mapLat: number;
+  mapLng: number;
+  hoursWeekday: string;
+  hoursFriday: Localized;
+  hoursShabbat: Localized;
+  legalStatus: string;
+  copyrightSuffix: Localized;
+  updatedAt: string;
+}
+
 /** Пользователь админки (users). */
 export interface User {
   id: number;

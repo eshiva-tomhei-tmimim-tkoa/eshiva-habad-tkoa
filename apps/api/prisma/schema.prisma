@@ -246,6 +246,29 @@ model SiteContent {
   @@map("site_content")
 }
 
+/// Реквизиты ешивы: один экземпляр (id=1). Текстовые поля без локализации —
+/// одинаковы во всех языках (телефоны, email, статус); локализованные — JSON.
+model Organization {
+  id              BigInt   @id @default(1)
+  brandName       Json     @map("brand_name") // Localized
+  brandSub        String   @map("brand_sub") @db.VarChar(64)
+  yechiText       String   @map("yechi_text") @db.Text
+  address         Json // Localized
+  phoneMain       String   @map("phone_main") @db.VarChar(32)
+  phoneSecondary  String?  @map("phone_secondary") @db.VarChar(32)
+  email           String   @db.VarChar(128)
+  mapLat          Float    @map("map_lat")
+  mapLng          Float    @map("map_lng")
+  hoursWeekday    String   @map("hours_weekday") @db.VarChar(32)
+  hoursFriday     Json     @map("hours_friday") // Localized
+  hoursShabbat    Json     @map("hours_shabbat") // Localized
+  legalStatus     String   @map("legal_status") @db.VarChar(64)
+  copyrightSuffix Json     @map("copyright_suffix") // Localized
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("organization")
+}
+
 /// Пользователи админки.
 model User {
   id           BigInt    @id @default(autoincrement())

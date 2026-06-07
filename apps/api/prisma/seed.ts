@@ -41,6 +41,37 @@ async function main() {
   await prisma.siteContent.deleteMany();
   await prisma.user.deleteMany();
 
+  // ---------- Реквизиты ешивы (organization, singleton) ----------
+  await prisma.organization.upsert({
+    where: { id: 1n },
+    update: {},
+    create: {
+      id: 1n,
+      brandName: { ru: 'Ешива ХаБаД Ткоа', he: 'ישיבת חב"ד תקוע', en: 'Yeshiva Chabad Tkoa' },
+      brandSub: 'Yeshiva · Tkoa · IL',
+      yechiText: 'יחי אדוננו מורנו ורבינו מלך המשיח לעולם ועד',
+      address: {
+        ru: 'Ткоа, Гуш-Эцион, Израиль',
+        he: 'תקוע, גוש עציון, ישראל',
+        en: 'Tkoa, Gush Etzion, Israel',
+      },
+      phoneMain: '+972-55-504-0828',
+      phoneSecondary: '+972-53-552-0466',
+      email: 'info@yeshiva-tkoa.org',
+      mapLat: 31.6478,
+      mapLng: 35.2148,
+      hoursWeekday: '08:00 – 18:00',
+      hoursFriday: { ru: 'до 14:00', he: 'עד 14:00', en: 'until 14:00' },
+      hoursShabbat: { ru: 'выходной', he: 'שבת', en: 'closed' },
+      legalStatus: '501(c)(3)',
+      copyrightSuffix: {
+        ru: 'Эрец Исроэль · Сделано с заботой',
+        he: 'ארץ ישראל · נעשה באהבה',
+        en: 'Eretz Israel · Made with care',
+      },
+    },
+  });
+
   // ---------- Должности (positions) ----------
   const positionTitles = [
     'Рош Ешива',

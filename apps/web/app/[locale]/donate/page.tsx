@@ -25,7 +25,23 @@ export default async function DonatePage({ params }: { params: Promise<{ locale:
     campaign && campaign.donorsCount > 0
       ? Math.round(campaign.raisedAmount / campaign.donorsCount)
       : 0;
+  const barPct = Math.min(Math.max(pct, 0), 100);
+  const numberLocale = locale === 'he' ? 'he-IL' : locale === 'en' ? 'en-US' : 'ru-RU';
   const fmt = (n: number) => n.toLocaleString('ru-RU');
+  const fmtCurrency = (amount: number, currency: string) => {
+    const cur = (currency || 'ILS').toUpperCase();
+    try {
+      return new Intl.NumberFormat(numberLocale, {
+        style: 'currency',
+        currency: cur,
+        currencyDisplay: 'symbol',
+        minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+        maximumFractionDigits: 2,
+      }).format(amount);
+    } catch {
+      return `${fmt(amount)} ${cur}`;
+    }
+  };
   const dateFmt = new Intl.DateTimeFormat(locale === 'he' ? 'he-IL' : locale === 'en' ? 'en-US' : 'ru-RU', {
     day: 'numeric',
     month: 'short',
@@ -62,9 +78,12 @@ export default async function DonatePage({ params }: { params: Promise<{ locale:
               </div>
 
               <div className="dp-bar-track">
-                <div className="dp-bar-fill" style={{ width: `${pct}%` }}>
-                  <span className="dp-bar-pct mono">{pct}%</span>
-                </div>
+                <div className="dp-bar-fill" style={{ width: `${barPct}%` }} />
+              </div>
+
+              <div className="dp-progress-foot">
+                <span className="dp-progress-label mono">{tr('ofGoal')}</span>
+                <strong className="dp-bar-pct mono">{pct}%</strong>
               </div>
 
               <div className="dp-meta">
@@ -101,15 +120,7 @@ export default async function DonatePage({ params }: { params: Promise<{ locale:
                       <div className="donor-name">{d.name}</div>
                       <div className="donor-date mono">{dateFmt.format(new Date(d.donatedAt))}</div>
                     </div>
-                    <div className="donor-amt mono">
-                      {fmt(d.amountIls ?? d.amount)} ₪
-                      {d.currency !== 'ILS' && (
-                        <span style={{ color: 'var(--text-dim)', fontWeight: 400 }}>
-                          {' '}
-                          ({fmt(d.amount)} {d.currency})
-                        </span>
-                      )}
-                    </div>
+                    <div className="donor-amt mono">{fmtCurrency(d.amount, d.currency)}</div>
                   </div>
                 ))}
               </div>

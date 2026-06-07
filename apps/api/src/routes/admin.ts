@@ -17,6 +17,7 @@ import {
   donorInputSchema,
   donorImportCommitSchema,
   campaignInputSchema,
+  organizationInputSchema,
   reorderSchema,
   idSetSchema,
 } from '@yeshiva/types';
@@ -707,6 +708,86 @@ adminRouter.put(
       currency: saved.currency,
       endsAt: saved.endsAt ? saved.endsAt.toISOString() : null,
       isActive: saved.isActive,
+    });
+  }),
+);
+
+// ---------------------------------------------------------------------------
+// Реквизиты ешивы (singleton id=1). PUT обновляет, GET читает.
+// ---------------------------------------------------------------------------
+adminRouter.get(
+  '/organization',
+  asyncHandler(async (_req, res) => {
+    const org = await prisma.organization.findUnique({ where: { id: 1n } });
+    if (!org) {
+      sendError(res, 404, 'NOT_FOUND', 'Реквизиты ешивы не сконфигурированы');
+      return;
+    }
+    sendData(res, {
+      brandName: loc(org.brandName as never),
+      brandSub: org.brandSub,
+      yechiText: org.yechiText,
+      address: loc(org.address as never),
+      phoneMain: org.phoneMain,
+      phoneSecondary: org.phoneSecondary,
+      email: org.email,
+      mapLat: org.mapLat,
+      mapLng: org.mapLng,
+      hoursWeekday: org.hoursWeekday,
+      hoursFriday: loc(org.hoursFriday as never),
+      hoursShabbat: loc(org.hoursShabbat as never),
+      legalStatus: org.legalStatus,
+      copyrightSuffix: loc(org.copyrightSuffix as never),
+      updatedAt: org.updatedAt.toISOString(),
+    });
+  }),
+);
+
+adminRouter.put(
+  '/organization',
+  asyncHandler(async (req, res) => {
+    const parsed = organizationInputSchema.safeParse(req.body);
+    if (!parsed.success) {
+      sendError(res, 422, 'VALIDATION', 'Проверьте поля реквизитов', flattenZod(parsed.error));
+      return;
+    }
+    const data = {
+      brandName: parsed.data.brandName,
+      brandSub: parsed.data.brandSub,
+      yechiText: parsed.data.yechiText,
+      address: parsed.data.address,
+      phoneMain: parsed.data.phoneMain,
+      phoneSecondary: parsed.data.phoneSecondary ?? null,
+      email: parsed.data.email,
+      mapLat: parsed.data.mapLat,
+      mapLng: parsed.data.mapLng,
+      hoursWeekday: parsed.data.hoursWeekday,
+      hoursFriday: parsed.data.hoursFriday,
+      hoursShabbat: parsed.data.hoursShabbat,
+      legalStatus: parsed.data.legalStatus,
+      copyrightSuffix: parsed.data.copyrightSuffix,
+    };
+    const org = await prisma.organization.upsert({
+      where: { id: 1n },
+      update: data,
+      create: { id: 1n, ...data },
+    });
+    sendData(res, {
+      brandName: loc(org.brandName as never),
+      brandSub: org.brandSub,
+      yechiText: org.yechiText,
+      address: loc(org.address as never),
+      phoneMain: org.phoneMain,
+      phoneSecondary: org.phoneSecondary,
+      email: org.email,
+      mapLat: org.mapLat,
+      mapLng: org.mapLng,
+      hoursWeekday: org.hoursWeekday,
+      hoursFriday: loc(org.hoursFriday as never),
+      hoursShabbat: loc(org.hoursShabbat as never),
+      legalStatus: org.legalStatus,
+      copyrightSuffix: loc(org.copyrightSuffix as never),
+      updatedAt: org.updatedAt.toISOString(),
     });
   }),
 );

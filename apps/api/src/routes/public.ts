@@ -213,6 +213,35 @@ publicRouter.get(
   }),
 );
 
+// GET /api/organization — реквизиты ешивы (singleton).
+publicRouter.get(
+  '/organization',
+  asyncHandler(async (_req, res) => {
+    const org = await prisma.organization.findUnique({ where: { id: 1n } });
+    if (!org) {
+      sendError(res, 404, 'NOT_FOUND', 'Реквизиты ешивы не сконфигурированы');
+      return;
+    }
+    sendData(res, {
+      brandName: loc(org.brandName),
+      brandSub: org.brandSub,
+      yechiText: org.yechiText,
+      address: loc(org.address),
+      phoneMain: org.phoneMain,
+      phoneSecondary: org.phoneSecondary,
+      email: org.email,
+      mapLat: org.mapLat,
+      mapLng: org.mapLng,
+      hoursWeekday: org.hoursWeekday,
+      hoursFriday: loc(org.hoursFriday),
+      hoursShabbat: loc(org.hoursShabbat),
+      legalStatus: org.legalStatus,
+      copyrightSuffix: loc(org.copyrightSuffix),
+      updatedAt: org.updatedAt.toISOString(),
+    });
+  }),
+);
+
 // GET /api/content/:group — тексты страницы как { key: Localized }.
 publicRouter.get(
   '/content/:group',

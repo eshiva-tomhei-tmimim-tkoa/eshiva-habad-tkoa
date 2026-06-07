@@ -9,18 +9,18 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       # Заглушки: prisma generate и сборка не подключаются к БД.
       DATABASE_URL: mysql://user:pass@localhost:3306/db
       NEXT_PUBLIC_API_URL: http://localhost:4000/api
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
