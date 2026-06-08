@@ -1,4 +1,5 @@
 import { getRequestConfig } from 'next-intl/server';
+import type { AbstractIntlMessages } from 'next-intl';
 import { routing, type AppLocale } from './routing';
 import { getContent } from '../lib/api';
 
@@ -48,6 +49,6 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
   return {
     locale,
-    messages: applyOverrides(defaults, flat),
+    messages: applyOverrides(defaults, flat) as AbstractIntlMessages,
   };
 });
