@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { apiGet, t } from '@/lib/api';
 import { PageHeader } from '@/components/PageHeader';
+import { StudySubnav } from '@/components/StudySubnav';
 import { ScheduleView, type ScheduleRow } from '@/components/ScheduleView';
 import { WEEKDAYS, type ScheduleSlotDto } from '@/lib/dto';
 import type { AppLocale } from '@/i18n/routing';
@@ -27,6 +28,7 @@ export default async function SchedulePage({ params }: { params: Promise<{ local
       <PageHeader eyebrow={tr('eyebrow')} title={tr('title')} desc={tr('desc')} />
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="container">
+          <StudySubnav active="schedule" />
           <ScheduleView
             slots={rows}
             weekdays={WEEKDAYS}

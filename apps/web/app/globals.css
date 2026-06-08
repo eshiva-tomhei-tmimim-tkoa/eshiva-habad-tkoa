@@ -1480,3 +1480,263 @@ html.motion-ready .fade-up[data-motion-reveal='true'] {
   }
   .app-shell::after { display: none; }
 }
+
+/* ============================================================
+   ПЛАВНЫЕ HOVER-ПЕРЕХОДЫ (мягче и единообразно по всему сайту)
+   Не в @layer — переопределяет более резкие переходы в компонентах.
+   ============================================================ */
+.btn,
+.card,
+.card-link,
+.nav-link,
+.lang-btn,
+.icon-btn,
+.donate-btn,
+.brand,
+.team-card,
+.stud-thumb,
+.student-card,
+.student-card-more,
+.schd-item,
+.contact-card,
+.study-cta-link,
+.curr-tab,
+.chip,
+.day-btn,
+.hub-card,
+.tl-card,
+.study-subnav-tab,
+.study-subnav-back,
+.modal-close,
+.field input,
+.field textarea,
+.enroll-select {
+  transition-property: color, background-color, background, border-color, box-shadow, transform, opacity;
+  transition-duration: 0.32s;
+  transition-timing-function: var(--ease);
+}
+.btn-arrow svg,
+.hub-card-arrow,
+.hub-card::before,
+.curr-tab-arrow,
+.student-card-more svg,
+.nav-link::after {
+  transition-duration: 0.32s;
+  transition-timing-function: var(--ease);
+}
+
+/* ============================================================
+   УЧЕНИКИ — сетка карточек + модалка с биографией
+   ============================================================ */
+.students-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 22px;
+}
+.student-card {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  background: var(--bg-elev);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+}
+.student-card:hover {
+  border-color: var(--border);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+.student-card-media {
+  aspect-ratio: 4 / 3;
+}
+.student-card-media .img-placeholder {
+  height: 100%;
+  border-radius: 0;
+}
+.student-card-body {
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.student-card-name {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: var(--display-weight);
+  line-height: 1.2;
+}
+.student-card-prof {
+  font-size: 0.68rem;
+  color: var(--text-soft);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.student-card-more {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.student-card-more svg {
+  width: 16px;
+  height: 16px;
+}
+.student-card:hover .student-card-more svg {
+  transform: translateX(3px);
+}
+
+.student-modal {
+  width: min(920px, 100%);
+}
+.student-modal-grid {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 36px;
+  align-items: start;
+}
+.student-modal-media .img-placeholder {
+  border-radius: var(--radius-lg);
+}
+@media (max-width: 720px) {
+  .student-modal-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .student-modal-media {
+    max-width: 280px;
+  }
+}
+
+/* ============================================================
+   ПОДМЕНЮ РАЗДЕЛА «УЧЁБА»
+   ============================================================ */
+.study-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 36px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.study-subnav-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-soft);
+  font-size: 0.85rem;
+}
+.study-subnav-back svg {
+  width: 16px;
+  height: 16px;
+}
+.study-subnav-back:hover {
+  color: var(--text);
+  transform: translateX(-2px);
+}
+.study-subnav-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-inline-start: auto;
+}
+.study-subnav-tab {
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  background: var(--bg-elev);
+  border: 1px solid var(--border-soft);
+  color: var(--text-soft);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.study-subnav-tab:hover {
+  color: var(--text);
+  border-color: var(--border);
+}
+.study-subnav-tab.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+/* CTA-баннер записи на странице «Учёба» */
+.study-enroll {
+  margin-top: 64px;
+  padding: 40px;
+  border-radius: var(--radius-xl);
+  background: var(--bg-elev);
+  border: 1px solid var(--border-soft);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+@media (max-width: 640px) {
+  .study-enroll {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ============================================================
+   ФОРМА ЗАПИСИ НА ОБУЧЕНИЕ
+   ============================================================ */
+.enroll-card {
+  background: var(--bg-elev);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-xl);
+  padding: 40px;
+}
+.enroll-select {
+  background: var(--bg);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  width: 100%;
+}
+.enroll-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--bg-elev);
+}
+.enroll-note {
+  margin-top: 16px;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  text-align: center;
+}
+.enroll-done {
+  text-align: center;
+  padding: 24px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.enroll-done-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--primary);
+  display: grid;
+  place-items: center;
+}
+.enroll-done-icon svg {
+  width: 30px;
+  height: 30px;
+}
+@media (max-width: 640px) {
+  .enroll-card {
+    padding: 24px;
+  }
+}

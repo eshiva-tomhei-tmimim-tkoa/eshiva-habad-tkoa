@@ -48,6 +48,8 @@ export default async function StudentsPage({ params }: { params: Promise<{ local
                 duration: tr('duration'),
                 video: tr('video'),
                 achievements: tr('achievements'),
+                more: tr('more'),
+                close: tr('close'),
               }}
               achievements={achievements}
             />

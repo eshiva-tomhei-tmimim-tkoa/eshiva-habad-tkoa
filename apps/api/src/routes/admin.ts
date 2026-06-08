@@ -19,6 +19,7 @@ import {
   donorImportCommitSchema,
   campaignInputSchema,
   organizationInputSchema,
+  enrollmentAdminSchema,
   reorderSchema,
   idSetSchema,
 } from '@yeshiva/types';
@@ -304,6 +305,39 @@ adminRouter.use(
       contentKey: r.contentKey,
       value: loc(r.value as never),
       pageGroup: r.pageGroup,
+    }),
+  }),
+);
+
+// enrollments (заявки на обучение) — создаются публично, в админке: просмотр,
+// отметка «обработана», удаление (CRUD-форма позволяет и правку).
+adminRouter.use(
+  '/enrollments',
+  crud({
+    model: prisma.enrollmentApplication as unknown as PrismaDelegate,
+    createSchema: enrollmentAdminSchema,
+    findManyArgs: { orderBy: { createdAt: 'desc' } },
+    toData: (i) => ({
+      firstName: i.firstName,
+      lastName: i.lastName,
+      birthDate: i.birthDate,
+      city: i.city,
+      jewishness: i.jewishness,
+      rabbiName: (i.rabbiName as string | undefined) ?? null,
+      rabbiPhone: (i.rabbiPhone as string | undefined) ?? null,
+      isProcessed: i.isProcessed ?? false,
+    }),
+    toDto: (r) => ({
+      id: num(r.id as bigint),
+      firstName: r.firstName,
+      lastName: r.lastName,
+      birthDate: r.birthDate,
+      city: r.city,
+      jewishness: r.jewishness,
+      rabbiName: r.rabbiName ?? null,
+      rabbiPhone: r.rabbiPhone ?? null,
+      isProcessed: r.isProcessed,
+      createdAt: (r.createdAt as Date).toISOString(),
     }),
   }),
 );

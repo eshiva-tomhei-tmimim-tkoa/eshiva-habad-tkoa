@@ -43,6 +43,14 @@ const DAILY_CATEGORIES = [
   { value: 'personal', label: 'Личное' },
 ];
 
+const JEWISHNESS_OPTIONS = [
+  { value: 'halacha', label: 'По алахе' },
+  { value: 'giyur', label: 'Гиюр' },
+];
+
+const jewishnessLabel = (v: unknown): string =>
+  JEWISHNESS_OPTIONS.find((o) => o.value === v)?.label ?? String(v ?? '');
+
 export const ENTITIES: EntityDef[] = [
   {
     key: 'team',
@@ -261,6 +269,41 @@ export const ENTITIES: EntityDef[] = [
       { type: 'text', key: 'currency', label: 'Валюта (ISO: ILS/USD/EUR…)' },
       { type: 'text', key: 'donatedAt', label: 'Дата (YYYY-MM-DD)' },
       { type: 'boolean', key: 'isAnonymous', label: 'Аноним' },
+    ],
+  },
+  {
+    key: 'enrollments',
+    title: 'Заявки на обучение',
+    endpoint: '/admin/enrollments',
+    columns: [
+      {
+        field: 'name',
+        header: 'Имя',
+        value: (r) => `${r.firstName ?? ''} ${r.lastName ?? ''}`.trim(),
+        width: 200,
+      },
+      { field: 'birthDate', header: 'Дата рожд.', value: (r) => String(r.birthDate ?? ''), width: 120 },
+      { field: 'city', header: 'Город', value: (r) => String(r.city ?? ''), width: 140 },
+      { field: 'jewishness', header: 'Еврейство', value: (r) => jewishnessLabel(r.jewishness), width: 110 },
+      { field: 'rabbiName', header: 'Раввин', value: (r) => String(r.rabbiName ?? '—'), width: 160 },
+      { field: 'rabbiPhone', header: 'Тел. раввина', value: (r) => String(r.rabbiPhone ?? '—'), width: 150 },
+      {
+        field: 'createdAt',
+        header: 'Подана',
+        value: (r) => String(r.createdAt ?? '').slice(0, 10),
+        width: 120,
+      },
+      { field: 'isProcessed', header: 'Обработана', value: (r) => (r.isProcessed ? 'да' : 'нет'), width: 110 },
+    ],
+    fields: [
+      { type: 'text', key: 'firstName', label: 'Имя', required: true },
+      { type: 'text', key: 'lastName', label: 'Фамилия', required: true },
+      { type: 'text', key: 'birthDate', label: 'Дата рождения (YYYY-MM-DD)', required: true },
+      { type: 'text', key: 'city', label: 'Город', required: true },
+      { type: 'enum', key: 'jewishness', label: 'Еврейство', options: JEWISHNESS_OPTIONS },
+      { type: 'text', key: 'rabbiName', label: 'Имя раввина' },
+      { type: 'text', key: 'rabbiPhone', label: 'Телефон раввина' },
+      { type: 'boolean', key: 'isProcessed', label: 'Обработана' },
     ],
   },
 ];

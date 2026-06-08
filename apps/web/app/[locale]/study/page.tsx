@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { PageHeader } from '@/components/PageHeader';
+import { Btn } from '@/components/Btn';
 import { Icon } from '@/components/Icons';
 import { Link } from '@/i18n/navigation';
 import type { AppLocale } from '@/i18n/routing';
@@ -55,6 +56,14 @@ export default async function StudyHubPage({ params }: { params: Promise<{ local
                 </div>
               ))}
             </div>
+          </div>
+
+          <div className="study-enroll fade-up">
+            <div>
+              <h2 className="section-title">{tr('enrollCtaTitle')}</h2>
+              <p className="section-desc" style={{ marginTop: 12 }}>{tr('enrollCtaDesc')}</p>
+            </div>
+            <Btn href="/enroll" icon={<Icon.arrow />}>{tr('enrollCta')}</Btn>
           </div>
         </div>
       </section>

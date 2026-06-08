@@ -13,6 +13,7 @@
     "titleHighlight": "in one place",
     "lead": "A universal school for young men from the CIS: the teachings of the Lubavitcher Rebbe, a profession, Hebrew and integration under experienced mentors.",
     "ctaStudy": "The study process",
+    "ctaEnroll": "Apply to study",
     "ctaDonate": "Support the yeshiva",
     "heroMediaLabel": "main photo · yeshiva class",
     "heroVideoMeta": "Video tour · 02:14",
@@ -73,6 +74,8 @@
     "duration": "At the yeshiva",
     "courses": "Profession",
     "video": "Video story",
+    "more": "Details",
+    "close": "Close",
     "achievements": "Student achievements",
     "ach1T": "Students",
     "ach1D": "Actively studying at the yeshiva today",
@@ -107,7 +110,12 @@
     "principle3D": "Small groups, a personal approach, shared meals and genuine relationships between students and mentors.",
     "principle4T": "Experienced mentors",
     "principle4D": "Professionals across many fields with deep experience of life in the Land of Israel.",
-    "open": "Open"
+    "open": "Open",
+    "subnavHub": "Overview",
+    "subnavBack": "Back to «Study»",
+    "enrollCta": "Apply to study",
+    "enrollCtaTitle": "Ready to join the yeshiva?",
+    "enrollCtaDesc": "Fill out a short form — and we will contact you about admission."
   },
   "daily": {
     "eyebrow": "Daily routine",
@@ -193,6 +201,26 @@
     "thanksReceipt": "A tax-deductible receipt will be emailed to you by Israel Toremet.",
     "thanksHome": "Back home",
     "secure": "Secure payment · 501(c)(3) · all donations tax-deductible"
+  },
+  "enroll": {
+    "eyebrow": "Admission",
+    "title": "Apply to study",
+    "desc": "Fill out the form — it is the first step toward admission to the yeshiva. We will contact you to discuss the details.",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "birthDate": "Date of birth",
+    "city": "City",
+    "jewishness": "Jewish status",
+    "jewishnessPlaceholder": "Select…",
+    "jewishnessHalacha": "By halacha",
+    "jewishnessGiyur": "Giyur",
+    "rabbiName": "Rabbi's name (for reference)",
+    "rabbiPhone": "Rabbi's phone",
+    "submit": "Submit application",
+    "sending": "Sending…",
+    "thanks": "Application sent!",
+    "thanksDesc": "Thank you. We will contact you about admission.",
+    "note": "The «Rabbi's name» and «Rabbi's phone» fields are for verification; they are optional."
   },
   "footer": {
     "about": "A school in the village of Tkoa (Gush Etzion, Israel). Torah and Chassidut, a profession, Hebrew and integration.",

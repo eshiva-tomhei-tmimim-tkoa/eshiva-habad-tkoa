@@ -235,6 +235,24 @@ model ContactMessage {
   @@map("contact_messages")
 }
 
+/// Заявки на обучение (внутренняя анкета записи).
+model EnrollmentApplication {
+  id          BigInt   @id @default(autoincrement())
+  firstName   String   @map("first_name") @db.VarChar(64)
+  lastName    String   @map("last_name") @db.VarChar(64)
+  birthDate   String   @map("birth_date") @db.VarChar(16)
+  city        String   @db.VarChar(128)
+  /// Еврейство: 'halacha' (по алахе) | 'giyur' (гиюр).
+  jewishness  String   @db.VarChar(16)
+  rabbiName   String?  @map("rabbi_name") @db.VarChar(128)
+  rabbiPhone  String?  @map("rabbi_phone") @db.VarChar(32)
+  isProcessed Boolean  @default(false) @map("is_processed")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([isProcessed])
+  @@map("enrollment_applications")
+}
+
 /// Произвольные редактируемые тексты страниц.
 model SiteContent {
   id         BigInt @id @default(autoincrement())

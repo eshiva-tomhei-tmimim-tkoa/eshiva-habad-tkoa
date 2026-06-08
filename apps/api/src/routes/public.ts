@@ -1,5 +1,10 @@
 import { Router } from 'express';
-import { contactInputSchema, donationInputSchema, donationConfirmSchema } from '@yeshiva/types';
+import {
+  contactInputSchema,
+  enrollmentInputSchema,
+  donationInputSchema,
+  donationConfirmSchema,
+} from '@yeshiva/types';
 import { prisma } from '../db.js';
 import { sendData, sendError, asyncHandler } from '../lib/respond.js';
 import { num, dec, loc, locArray, dayArray, timeHHMM } from '../lib/serialize.js';
@@ -266,6 +271,30 @@ publicRouter.post(
     }
     const msg = await prisma.contactMessage.create({ data: parsed.data });
     sendData(res, { id: num(msg.id), createdAt: msg.createdAt.toISOString() });
+  }),
+);
+
+// POST /api/enroll — приём анкеты записи на обучение.
+publicRouter.post(
+  '/enroll',
+  asyncHandler(async (req, res) => {
+    const parsed = enrollmentInputSchema.safeParse(req.body);
+    if (!parsed.success) {
+      sendError(res, 422, 'VALIDATION', 'Проверьте поля анкеты', flattenZod(parsed.error));
+      return;
+    }
+    const app = await prisma.enrollmentApplication.create({
+      data: {
+        firstName: parsed.data.firstName,
+        lastName: parsed.data.lastName,
+        birthDate: parsed.data.birthDate,
+        city: parsed.data.city,
+        jewishness: parsed.data.jewishness,
+        rabbiName: parsed.data.rabbiName ?? null,
+        rabbiPhone: parsed.data.rabbiPhone ?? null,
+      },
+    });
+    sendData(res, { id: num(app.id), createdAt: app.createdAt.toISOString() });
   }),
 );
 

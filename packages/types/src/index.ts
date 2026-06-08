@@ -131,6 +131,20 @@ export interface ContactMessage {
   createdAt: string;
 }
 
+/** Заявка на обучение (enrollment_applications). */
+export interface EnrollmentApplication {
+  id: number;
+  firstName: string;
+  lastName: string;
+  birthDate: string;
+  city: string;
+  jewishness: 'halacha' | 'giyur';
+  rabbiName: string | null;
+  rabbiPhone: string | null;
+  isProcessed: boolean;
+  createdAt: string;
+}
+
 /** Произвольный редактируемый текст страницы (site_content). */
 export interface SiteContent {
   id: number;

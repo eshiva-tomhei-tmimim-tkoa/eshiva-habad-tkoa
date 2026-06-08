@@ -60,10 +60,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: A
               </h1>
               <p className="hero-desc fade-up fade-up-2">{tr('lead')}</p>
               <div className="hero-cta fade-up fade-up-3">
-                <Btn href="/study" icon={<Icon.arrow />}>
+                <Btn href="/enroll" icon={<Icon.arrow />}>
+                  {tr('ctaEnroll')}
+                </Btn>
+                <Btn href="/study" variant="secondary" icon={<Icon.arrow />}>
                   {tr('ctaStudy')}
                 </Btn>
-                <Btn href="/donate" variant="secondary" icon={<Icon.heart />}>
+                <Btn href="/donate" variant="ghost" icon={<Icon.heart />}>
                   {tr('ctaDonate')}
                 </Btn>
               </div>

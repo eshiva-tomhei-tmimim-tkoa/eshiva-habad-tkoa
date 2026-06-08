@@ -38,6 +38,37 @@ export const contactInputSchema = z.object({
 });
 export type ContactInput = z.infer<typeof contactInputSchema>;
 
+/** Еврейство в анкете записи. */
+export const jewishnessSchema = z.enum(['halacha', 'giyur']);
+export type Jewishness = z.infer<typeof jewishnessSchema>;
+
+/** Пустую строку трактуем как «не указано» (optional). */
+const optionalTrimmed = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .optional()
+    .transform((v) => (v ? v : undefined));
+
+/** POST /api/enroll — внутренняя анкета записи на обучение. */
+export const enrollmentInputSchema = z.object({
+  firstName: z.string().trim().min(1).max(64),
+  lastName: z.string().trim().min(1).max(64),
+  birthDate: z.string().trim().min(1).max(16),
+  city: z.string().trim().min(1).max(128),
+  jewishness: jewishnessSchema,
+  rabbiName: optionalTrimmed(128),
+  rabbiPhone: optionalTrimmed(32),
+});
+export type EnrollmentInput = z.infer<typeof enrollmentInputSchema>;
+
+/** Та же анкета для админки + флаг обработки (PUT/POST /admin/enrollments). */
+export const enrollmentAdminSchema = enrollmentInputSchema.extend({
+  isProcessed: z.boolean().default(false),
+});
+export type EnrollmentAdminInput = z.infer<typeof enrollmentAdminSchema>;
+
 /** POST /api/donations */
 export const donationInputSchema = z.object({
   campaignId: z.number().int().positive(),
