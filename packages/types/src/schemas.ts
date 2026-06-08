@@ -150,6 +150,27 @@ export const siteContentInputSchema = z.object({
 });
 export type SiteContentInput = z.infer<typeof siteContentInputSchema>;
 
+/** PUT /admin/content/batch — массовый upsert текстов по contentKey.
+ * value может быть полностью пустым ({ru:'',he:'',en:''}) — это означает
+ * «удалить override» (запись стирается, сайт берёт значение по умолчанию). */
+export const siteContentBatchSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        contentKey: z.string().min(1).max(128),
+        value: z.object({
+          ru: z.string().default(''),
+          he: z.string().default(''),
+          en: z.string().default(''),
+        }),
+        pageGroup: z.string().min(1).max(64),
+      }),
+    )
+    .min(1)
+    .max(500),
+});
+export type SiteContentBatchInput = z.infer<typeof siteContentBatchSchema>;
+
 export const donorInputSchema = z.object({
   campaignId: z.number().int().positive(),
   name: z.string().min(1).max(128),

@@ -1,11 +1,15 @@
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
+import { getOrganization, t, telHref } from '@/lib/api';
 import { Logo } from './Logo';
 
 export async function Footer() {
   const nav = await getTranslations('nav');
   const footer = await getTranslations('footer');
   const study = await getTranslations('study');
+  const locale = (await getLocale()) as 'ru' | 'he' | 'en';
+  const org = await getOrganization();
+  const brandName = t(org.brandName, locale);
 
   return (
     <footer className="footer">
@@ -15,8 +19,8 @@ export async function Footer() {
             <div className="brand">
               <Logo />
               <div>
-                <div className="brand-name">Ешива ХаБаД Ткоа</div>
-                <div className="brand-sub">Yeshiva · Tkoa · IL</div>
+                <div className="brand-name">{brandName}</div>
+                <div className="brand-sub">{org.brandSub}</div>
               </div>
             </div>
             <p className="footer-blurb">{footer('about')}</p>
@@ -44,16 +48,16 @@ export async function Footer() {
           <div>
             <h4>{footer('contacts')}</h4>
             <div className="footer-list">
-              <span>Tkoa, Gush Etzion, Israel</span>
-              <a href="tel:+972535520466">+972-53-552-0466</a>
-              <a href="mailto:info@yeshiva-tkoa.org">info@yeshiva-tkoa.org</a>
+              <span>{t(org.address, locale)}</span>
+              <a href={telHref(org.phoneMain)}>{org.phoneMain}</a>
+              <a href={`mailto:${org.email}`}>{org.email}</a>
             </div>
           </div>
         </div>
 
         <div className="footer-bottom">
-          <span>© {new Date().getFullYear()} Yeshiva Chabad Tkoa · 501(c)(3)</span>
-          <span>Эрец Исроэль · Made with care</span>
+          <span>© {new Date().getFullYear()} {org.brandName.en} · {org.legalStatus}</span>
+          <span>{t(org.copyrightSuffix, locale)}</span>
         </div>
       </div>
     </footer>

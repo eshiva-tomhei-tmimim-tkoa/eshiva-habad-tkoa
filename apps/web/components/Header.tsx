@@ -1,17 +1,20 @@
 'use client';
 import { useEffect } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
+import type { Organization } from '@yeshiva/types';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { routing } from '@/i18n/routing';
 import { useUIStore } from '@/store/ui';
+import { t } from '@/lib/api';
 import { Logo } from './Logo';
 import { Icon } from './Icons';
 
 const LOCALE_LABELS: Record<string, string> = { ru: 'RU', he: 'HE', en: 'EN' };
 
-export function Header() {
+export function Header({ org }: { org: Organization }) {
   const tr = useTranslations('nav');
-  const locale = useLocale();
+  const locale = useLocale() as 'ru' | 'he' | 'en';
+  const brandName = t(org.brandName, locale);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -46,11 +49,11 @@ export function Header() {
     <>
       <header className="header">
         <div className="container header-inner">
-          <Link href="/" className="brand" aria-label="Ешива ХаБаД Ткоа">
+          <Link href="/" className="brand" aria-label={brandName}>
             <Logo />
             <div>
-              <div className="brand-name">Ешива ХаБаД Ткоа</div>
-              <div className="brand-sub">Yeshiva · Tkoa · IL</div>
+              <div className="brand-name">{brandName}</div>
+              <div className="brand-sub">{org.brandSub}</div>
             </div>
           </Link>
 
@@ -108,7 +111,7 @@ export function Header() {
           <div className="container">
             <div className="yechi-inner">
               <span className="yechi-deco" aria-hidden>◆</span>
-              <span className="yechi-text">יחי אדוננו מורנו ורבינו מלך המשיח לעולם ועד</span>
+              <span className="yechi-text">{org.yechiText}</span>
               <span className="yechi-deco" aria-hidden>◆</span>
             </div>
           </div>
@@ -120,7 +123,7 @@ export function Header() {
           <div className="mobile-nav-header">
             <div className="brand">
               <Logo />
-              <div className="brand-name">ХаБаД Ткоа</div>
+              <div className="brand-name">{brandName}</div>
             </div>
             <button
               type="button"

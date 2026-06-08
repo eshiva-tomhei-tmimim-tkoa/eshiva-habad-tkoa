@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { apiGet, t, assetUrl } from '@/lib/api';
+import { apiGet, getContent, t, cstr, assetUrl } from '@/lib/api';
 import { PageHeader } from '@/components/PageHeader';
 import { StudentsView, type StudentCard, type Achievement } from '@/components/StudentsView';
 import type { StudentDto } from '@/lib/dto';
@@ -11,7 +11,10 @@ export default async function StudentsPage({ params }: { params: Promise<{ local
   const { locale } = await params;
   setRequestLocale(locale);
   const tr = await getTranslations('students');
-  const students = await apiGet<StudentDto[]>('/students', []);
+  const [students, content] = await Promise.all([
+    apiGet<StudentDto[]>('/students', []),
+    getContent('students'),
+  ]);
 
   const cards: StudentCard[] = students.map((s) => ({
     id: s.id,
@@ -25,10 +28,10 @@ export default async function StudentsPage({ params }: { params: Promise<{ local
   }));
 
   const achievements: Achievement[] = [
-    { n: '47', t: tr('ach1T'), d: tr('ach1D') },
-    { n: '12', t: tr('ach2T'), d: tr('ach2D') },
-    { n: '9', t: tr('ach3T'), d: tr('ach3D') },
-    { n: '100%', t: tr('ach4T'), d: tr('ach4D') },
+    { n: cstr(content, 'students.ach.1.num', locale, '47'), t: tr('ach1T'), d: tr('ach1D') },
+    { n: cstr(content, 'students.ach.2.num', locale, '12'), t: tr('ach2T'), d: tr('ach2D') },
+    { n: cstr(content, 'students.ach.3.num', locale, '9'), t: tr('ach3T'), d: tr('ach3D') },
+    { n: cstr(content, 'students.ach.4.num', locale, '100%'), t: tr('ach4T'), d: tr('ach4D') },
   ];
 
   return (

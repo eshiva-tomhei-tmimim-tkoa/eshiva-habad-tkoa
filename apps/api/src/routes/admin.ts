@@ -14,6 +14,7 @@ import {
   courseInputSchema,
   dailyBlockInputSchema,
   siteContentInputSchema,
+  siteContentBatchSchema,
   donorInputSchema,
   donorImportCommitSchema,
   campaignInputSchema,
@@ -258,6 +259,35 @@ adminRouter.use(
       description: loc(r.description as never),
       sortOrder: r.sortOrder,
     }),
+  }),
+);
+
+// PUT /api/admin/content/batch — массовый upsert текстов по contentKey.
+// Должен идти ДО подключения CRUD-роутера на /content (иначе :id перехватит).
+adminRouter.put(
+  '/content/batch',
+  asyncHandler(async (req, res) => {
+    const parsed = siteContentBatchSchema.safeParse(req.body);
+    if (!parsed.success) {
+      sendError(res, 422, 'VALIDATION', 'Проверьте набор текстов', flattenZod(parsed.error));
+      return;
+    }
+    // Пустая запись (все три локали — пустая строка) трактуется как «удалить
+    // override»: запись стирается, чтобы сайт снова брал значение по умолчанию.
+    const isEmpty = (v: { ru: string; he: string; en: string }) =>
+      !v.ru && !v.he && !v.en;
+    await prisma.$transaction(
+      parsed.data.items.map((it) =>
+        isEmpty(it.value)
+          ? prisma.siteContent.deleteMany({ where: { contentKey: it.contentKey } })
+          : prisma.siteContent.upsert({
+              where: { contentKey: it.contentKey },
+              create: { contentKey: it.contentKey, value: it.value, pageGroup: it.pageGroup },
+              update: { value: it.value, pageGroup: it.pageGroup },
+            }),
+      ),
+    );
+    sendData(res, { ok: true, count: parsed.data.items.length });
   }),
 );
 

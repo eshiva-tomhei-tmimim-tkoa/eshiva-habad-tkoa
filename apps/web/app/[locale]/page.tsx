@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { apiGet, t, assetUrl } from '@/lib/api';
+import { apiGet, getContent, t, cstr, assetUrl } from '@/lib/api';
 import { Btn } from '@/components/Btn';
 import { ImgPlaceholder } from '@/components/PageHeader';
 import { Icon } from '@/components/Icons';
@@ -15,9 +15,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: A
   const tr = await getTranslations('home');
   const study = await getTranslations('study');
 
-  const [team, campaign] = await Promise.all([
+  const [team, campaign, content] = await Promise.all([
     apiGet<TeamMember[]>('/team', []),
     apiGet<CampaignDto | null>('/campaign', null),
+    getContent('home'),
   ]);
   const pct = campaign ? Math.round((campaign.raisedAmount / campaign.goalAmount) * 100) : 0;
 
@@ -29,11 +30,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: A
   ];
 
   const stats = [
-    { num: '47', sup: '+', label: tr('stat1Label') },
-    { num: '8', label: tr('stat2Label') },
-    { num: '5', label: tr('stat3Label') },
-    { num: '100', sup: '%', label: tr('stat4Label') },
+    { num: cstr(content, 'home.stat.1.num', locale, '47'), sup: cstr(content, 'home.stat.1.sup', locale, '+'), label: tr('stat1Label') },
+    { num: cstr(content, 'home.stat.2.num', locale, '8'), sup: cstr(content, 'home.stat.2.sup', locale, ''), label: tr('stat2Label') },
+    { num: cstr(content, 'home.stat.3.num', locale, '5'), sup: cstr(content, 'home.stat.3.sup', locale, ''), label: tr('stat3Label') },
+    { num: cstr(content, 'home.stat.4.num', locale, '100'), sup: cstr(content, 'home.stat.4.sup', locale, '%'), label: tr('stat4Label') },
   ];
+
+  const rebbeDate = cstr(content, 'home.rebbe.date', locale, '11 НИСАНА 5662 —');
+  const rebbePlace = cstr(content, 'home.rebbe.place', locale, '770 Eastern Parkway');
 
   const studyLinks = [
     { href: '/study/daily', n: '01', title: study('dailyTitle') },
@@ -109,12 +113,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: A
             <div className="rebbe-content">
               <div className="section-eyebrow">{tr('rebbeEyebrow')}</div>
               <h2 className="rebbe-title">{tr('rebbeName')}</h2>
-              <div className="rebbe-dates mono">11 НИСАНА 5662 —</div>
+              <div className="rebbe-dates mono">{rebbeDate}</div>
               <p className="rebbe-quote">{tr('rebbeQuote')}</p>
               <p className="rebbe-text">{tr('rebbeText')}</p>
               <div className="rebbe-meta">
                 <div className="rebbe-meta-item">
-                  <div className="rebbe-meta-l mono">770 Eastern Parkway</div>
+                  <div className="rebbe-meta-l mono">{rebbePlace}</div>
                   <div className="rebbe-meta-v">{tr('rebbePlaceValue')}</div>
                 </div>
               </div>
@@ -142,7 +146,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: A
               <div key={s.label}>
                 <div className="stat-num">
                   {s.num}
-                  {s.sup && <sup>{s.sup}</sup>}
+                  {s.sup ? <sup>{s.sup}</sup> : null}
                 </div>
                 <div className="stat-label">{s.label}</div>
               </div>

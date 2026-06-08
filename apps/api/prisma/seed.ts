@@ -431,18 +431,29 @@ async function main() {
   }
 
   // ---------- Тексты страниц (site_content) — стартовый набор ----------
+  // Числа hero-статистики и Ребе-блок выводим в SiteContent, чтобы редактор в
+  // админке мог их менять без пересборки. Дефолты совпадают с прежним хардкодом.
+  const HOME_REBBE_DATE = { ru: '11 НИСАНА 5662 —', he: 'י"א בניסן ה\'תרס"ב —', en: '11 NISSAN 5662 —' };
+  const HOME_REBBE_PLACE = { ru: '770 Eastern Parkway', he: '770 איסטרן פארקוויי', en: '770 Eastern Parkway' };
+  const numLoc = (s: string) => ({ ru: s, he: s, en: s });
+
   await prisma.siteContent.createMany({
     data: [
-      {
-        contentKey: 'home.hero.title',
-        value: L('Ешива «ХаБаД Ткоа»'),
-        pageGroup: 'home',
-      },
-      {
-        contentKey: 'home.hero.subtitle',
-        value: L('Тора и хасидут, профессия, иврит и адаптация, опытные наставники.'),
-        pageGroup: 'home',
-      },
+      // Home — статистика hero
+      { contentKey: 'home.stat.1.num', pageGroup: 'home', value: numLoc('47') },
+      { contentKey: 'home.stat.1.sup', pageGroup: 'home', value: numLoc('+') },
+      { contentKey: 'home.stat.2.num', pageGroup: 'home', value: numLoc('8') },
+      { contentKey: 'home.stat.3.num', pageGroup: 'home', value: numLoc('5') },
+      { contentKey: 'home.stat.4.num', pageGroup: 'home', value: numLoc('100') },
+      { contentKey: 'home.stat.4.sup', pageGroup: 'home', value: numLoc('%') },
+      // Home — блок про Ребе
+      { contentKey: 'home.rebbe.date', pageGroup: 'home', value: HOME_REBBE_DATE },
+      { contentKey: 'home.rebbe.place', pageGroup: 'home', value: HOME_REBBE_PLACE },
+      // Students — achievements
+      { contentKey: 'students.ach.1.num', pageGroup: 'students', value: numLoc('47') },
+      { contentKey: 'students.ach.2.num', pageGroup: 'students', value: numLoc('12') },
+      { contentKey: 'students.ach.3.num', pageGroup: 'students', value: numLoc('9') },
+      { contentKey: 'students.ach.4.num', pageGroup: 'students', value: numLoc('100%') },
     ],
   });
 

@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { PageHeader } from '@/components/PageHeader';
 import { ContactForm } from '@/components/ContactForm';
 import { Icon } from '@/components/Icons';
+import { getOrganization, t, telHref } from '@/lib/api';
 import type { AppLocale } from '@/i18n/routing';
 
 export const revalidate = 300;
@@ -10,6 +11,10 @@ export default async function ContactsPage({ params }: { params: Promise<{ local
   const { locale } = await params;
   setRequestLocale(locale);
   const tr = await getTranslations('contacts');
+  const org = await getOrganization();
+  const address = t(org.address, locale);
+  const brandName = t(org.brandName, locale);
+  const phones = [org.phoneMain, org.phoneSecondary].filter((p): p is string => Boolean(p));
 
   return (
     <>
@@ -22,7 +27,7 @@ export default async function ContactsPage({ params }: { params: Promise<{ local
                 <div className="contact-card-icon"><Icon.pin /></div>
                 <div>
                   <div className="contact-card-l mono">{tr('address')}</div>
-                  <div className="contact-card-v">Tkoa, Israel</div>
+                  <div className="contact-card-v">{address}</div>
                   <div className="contact-card-sub">{tr('locationSub')}</div>
                 </div>
               </div>
@@ -31,12 +36,11 @@ export default async function ContactsPage({ params }: { params: Promise<{ local
                 <div className="contact-card-icon"><Icon.phone /></div>
                 <div>
                   <div className="contact-card-l mono">{tr('phones')}</div>
-                  <div className="contact-card-v">
-                    <a href="tel:+972555040828">+972-55-504-0828</a>
-                  </div>
-                  <div className="contact-card-v">
-                    <a href="tel:+972535520466">+972-53-552-0466</a>
-                  </div>
+                  {phones.map((phone) => (
+                    <div key={phone} className="contact-card-v">
+                      <a href={telHref(phone)}>{phone}</a>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -45,7 +49,7 @@ export default async function ContactsPage({ params }: { params: Promise<{ local
                 <div>
                   <div className="contact-card-l mono">{tr('email')}</div>
                   <div className="contact-card-v">
-                    <a href="mailto:info@yeshiva-tkoa.org">info@yeshiva-tkoa.org</a>
+                    <a href={`mailto:${org.email}`}>{org.email}</a>
                   </div>
                 </div>
               </div>
@@ -56,11 +60,11 @@ export default async function ContactsPage({ params }: { params: Promise<{ local
                   <div className="contact-card-l mono">{tr('hours')}</div>
                   <div className="contact-hours">
                     <span>{tr('hoursWeekdays')}</span>
-                    <span className="mono">08:00 – 18:00</span>
+                    <span className="mono">{org.hoursWeekday}</span>
                     <span>{tr('hoursFri')}</span>
-                    <span className="contact-off">{tr('hoursOff')}</span>
+                    <span className="contact-off">{t(org.hoursFriday, locale)}</span>
                     <span>{tr('hoursSat')}</span>
-                    <span className="contact-off">{tr('hoursShabbat')}</span>
+                    <span className="contact-off">{t(org.hoursShabbat, locale)}</span>
                   </div>
                 </div>
               </div>
@@ -85,15 +89,15 @@ export default async function ContactsPage({ params }: { params: Promise<{ local
                   <div className="map-pin-pulse" />
                   <div className="map-pin-dot"><Icon.pin /></div>
                   <div className="map-pin-label">
-                    <strong>Ешива ХаБаД</strong>
-                    <span>Tkoa</span>
+                    <strong>{brandName}</strong>
+                    <span>{org.mapLat.toFixed(4)}°N, {org.mapLng.toFixed(4)}°E</span>
                   </div>
                 </div>
                 <div className="map-controls">
                   <span className="map-btn">+</span>
                   <span className="map-btn">−</span>
                 </div>
-                <div className="map-attribution mono">Tkoa · 31.6478°N, 35.2148°E</div>
+                <div className="map-attribution mono">{address} · {org.mapLat.toFixed(4)}°N, {org.mapLng.toFixed(4)}°E</div>
               </div>
             </div>
           </div>

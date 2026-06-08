@@ -1,4 +1,5 @@
 import type { Localized } from '@yeshiva/types';
+import { CONTENT_GROUPS } from './content-schema';
 
 /** Описание поля формы. */
 export type FieldDef =
@@ -267,3 +268,20 @@ export const ENTITIES: EntityDef[] = [
 export const ENTITY_MAP: Record<string, EntityDef> = Object.fromEntries(
   ENTITIES.map((e) => [e.key, e]),
 );
+
+/** Кастомные разделы админки вне CRUD-фабрики (singleton, batch-формы). */
+export interface StandalonePage {
+  key: string; // React-ключ
+  title: string;
+  href: string; // полный путь в админке
+}
+
+export const STANDALONE_PAGES: StandalonePage[] = [
+  { key: 'organization', title: 'Реквизиты ешивы', href: '/organization' },
+  ...CONTENT_GROUPS.map((g) => ({
+    key: `content-${g.slug}`,
+    title: `Контент: ${g.title}`,
+    href: `/content/${g.slug}`,
+  })),
+  { key: 'translations', title: 'Переводы UI', href: '/translations' },
+];

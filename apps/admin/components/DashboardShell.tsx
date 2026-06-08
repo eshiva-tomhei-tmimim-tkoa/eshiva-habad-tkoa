@@ -15,7 +15,7 @@ import {
   Divider,
 } from '@mui/material';
 import { api, ApiError } from '../lib/api';
-import { ENTITIES } from '../lib/entities';
+import { ENTITIES, STANDALONE_PAGES } from '../lib/entities';
 
 const DRAWER_WIDTH = 240;
 
@@ -91,6 +91,16 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                 onClick={() => router.push(`/${e.key}`)}
               >
                 <ListItemText primary={e.title} />
+              </ListItemButton>
+            ))}
+            <Divider />
+            {STANDALONE_PAGES.map((p) => (
+              <ListItemButton
+                key={p.key}
+                selected={pathname === p.href}
+                onClick={() => router.push(p.href)}
+              >
+                <ListItemText primary={p.title} />
               </ListItemButton>
             ))}
           </List>

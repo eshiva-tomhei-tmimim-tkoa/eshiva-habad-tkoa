@@ -7,7 +7,9 @@ import '../globals.css';
 import { manrope, alef, jetbrainsMono } from '@/lib/fonts';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { MotionEnhancer } from '@/components/MotionEnhancer';
 import { routing } from '@/i18n/routing';
+import { getOrganization } from '@/lib/api';
 
 export const metadata: Metadata = {
   title: 'Ешива «ХаБаД Ткоа»',
@@ -32,7 +34,7 @@ export default async function LocaleLayout({
   const { locale } = await params;
   if (!routing.locales.includes(locale as (typeof routing.locales)[number])) notFound();
   setRequestLocale(locale);
-  const messages = await getMessages();
+  const [messages, org] = await Promise.all([getMessages(), getOrganization()]);
 
   return (
     <html
@@ -47,7 +49,8 @@ export default async function LocaleLayout({
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <div className="app-shell">
-            <Header />
+            <Header org={org} />
+            <MotionEnhancer />
             <main>{children}</main>
             <Footer />
           </div>
