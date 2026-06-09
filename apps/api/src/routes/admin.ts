@@ -30,6 +30,7 @@ import { flattenZod } from '../lib/validate.js';
 import { num, dec, loc, locArray, dayArray, timeHHMM } from '../lib/serialize.js';
 import { triggerRevalidate } from '../lib/revalidate.js';
 import { ensureRates, convertToIls } from '../lib/fx.js';
+import { getErrors, clearErrors } from '../lib/errorLog.js';
 
 export const adminRouter: Router = Router();
 
@@ -46,6 +47,22 @@ adminRouter.use((req, res, next) => {
   }
   next();
 });
+
+// GET /api/admin/logs — последние ошибки API (диагностика). DELETE — очистить.
+adminRouter.get(
+  '/logs',
+  asyncHandler(async (_req, res) => {
+    const items = getErrors();
+    sendData(res, items, { count: items.length });
+  }),
+);
+adminRouter.delete(
+  '/logs',
+  asyncHandler(async (_req, res) => {
+    clearErrors();
+    sendData(res, { ok: true });
+  }),
+);
 
 // GET /api/admin/me — текущий пользователь (ARCHITECTURE §3.2).
 adminRouter.get(
@@ -869,7 +886,7 @@ const upload = multer({
       cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
     },
   }),
-  limits: { fileSize: 8 * 1024 * 1024 },
+  limits: { fileSize: 15 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => cb(null, file.mimetype.startsWith('image/')),
 });
 

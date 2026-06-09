@@ -9,6 +9,7 @@ import { publicRouter } from './routes/public.js';
 import { authRouter } from './routes/auth.js';
 import { adminRouter } from './routes/admin.js';
 import { sendError } from './lib/respond.js';
+import { classifyError, recordError } from './lib/errorLog.js';
 import { ensureRates } from './lib/fx.js';
 
 const app = express();
@@ -46,10 +47,24 @@ app.use('/api', (_req, res) => {
   sendError(res, 404, 'NOT_FOUND', 'Маршрут не найден');
 });
 
-// Единый обработчик ошибок.
-const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
-  console.error('[api] error:', err);
-  sendError(res, 500, 'INTERNAL', 'Внутренняя ошибка сервера');
+// Единый обработчик ошибок: классифицируем, пишем в диагностический буфер
+// (для страницы «Логи» в админке) и отдаём понятный статус/сообщение.
+const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
+  const { status, code, message } = classifyError(err);
+  const e = err as { name?: string; message?: string };
+  recordError({
+    method: req.method,
+    path: req.originalUrl,
+    status,
+    code,
+    message,
+    name: e?.name,
+    detail: e?.message,
+  });
+  // 5xx — полный стек в консоль; ожидаемые 4xx — короткое предупреждение.
+  if (status >= 500) console.error('[api] error:', err);
+  else console.warn(`[api] ${code} (${status}): ${e?.message ?? message}`);
+  sendError(res, status, code, message);
 };
 app.use(errorHandler);
 
