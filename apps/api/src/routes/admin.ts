@@ -20,6 +20,7 @@ import {
   campaignInputSchema,
   organizationInputSchema,
   enrollmentAdminSchema,
+  mediaAssetInputSchema,
   reorderSchema,
   idSetSchema,
 } from '@yeshiva/types';
@@ -47,6 +48,52 @@ adminRouter.use((req, res, next) => {
   }
   next();
 });
+
+// ---------------------------------------------------------------------------
+// Медиа-слоты (фото/видео сайта по ключу slug).
+// ---------------------------------------------------------------------------
+adminRouter.get(
+  '/media',
+  asyncHandler(async (_req, res) => {
+    const rows = await prisma.mediaAsset.findMany({ orderBy: { slug: 'asc' } });
+    sendData(
+      res,
+      rows.map((r) => ({ slug: r.slug, kind: r.kind, url: r.url, poster: r.poster })),
+      { count: rows.length },
+    );
+  }),
+);
+
+adminRouter.put(
+  '/media/:slug',
+  asyncHandler(async (req, res) => {
+    const parsed = mediaAssetInputSchema.safeParse(req.body);
+    if (!parsed.success) {
+      sendError(res, 422, 'VALIDATION', 'Проверьте медиа-слот', flattenZod(parsed.error));
+      return;
+    }
+    const slug = String(req.params.slug);
+    const data = {
+      kind: parsed.data.kind,
+      url: parsed.data.url,
+      poster: parsed.data.poster ?? null,
+    };
+    const row = await prisma.mediaAsset.upsert({
+      where: { slug },
+      update: data,
+      create: { slug, ...data },
+    });
+    sendData(res, { slug: row.slug, kind: row.kind, url: row.url, poster: row.poster });
+  }),
+);
+
+adminRouter.delete(
+  '/media/:slug',
+  asyncHandler(async (req, res) => {
+    await prisma.mediaAsset.deleteMany({ where: { slug: String(req.params.slug) } });
+    sendData(res, { ok: true });
+  }),
+);
 
 // GET /api/admin/logs — последние ошибки API (диагностика). DELETE — очистить.
 adminRouter.get(
@@ -900,5 +947,32 @@ adminRouter.post(
       return;
     }
     sendData(res, { photoUrl: `/uploads/${req.file.filename}` });
+  },
+);
+
+// Загрузка видео (или фото) для медиа-слотов. Больший лимит, чем у фото.
+const mediaUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, uploadDir),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname);
+      cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
+    },
+  }),
+  limits: { fileSize: 200 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) =>
+    cb(null, file.mimetype.startsWith('video/') || file.mimetype.startsWith('image/')),
+});
+
+adminRouter.post(
+  '/upload/video',
+  requireRole('admin', 'editor'),
+  mediaUpload.single('file'),
+  (req: Request, res: Response) => {
+    if (!req.file) {
+      sendError(res, 422, 'VALIDATION', 'Файл не получен (ожидается video/* или image/*, поле file)');
+      return;
+    }
+    sendData(res, { url: `/uploads/${req.file.filename}` });
   },
 );

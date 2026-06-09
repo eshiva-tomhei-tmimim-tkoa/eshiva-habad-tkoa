@@ -30,6 +30,22 @@ export async function apiGet<T>(path: string, fallback: T): Promise<T> {
   }
 }
 
+/** Медиа-слот сайта: фото или видео под ключом slug. */
+export interface MediaSlot {
+  kind: 'image' | 'video';
+  url: string;
+  poster: string | null;
+}
+export type MediaMap = Record<string, MediaSlot>;
+
+export const getMedia = (): Promise<MediaMap> => apiGet<MediaMap>('/media', {});
+
+/** URL медиа: внешние ссылки — как есть, относительные /uploads/… — через assetUrl. */
+export const mediaSrc = (url: string | null | undefined): string | undefined => {
+  if (!url) return undefined;
+  return /^https?:\/\//i.test(url) ? url : assetUrl(url);
+};
+
 /** Текущая локаль (этап 5 — только ru; переключатель — этап 7). */
 export const t = (v: Localized | undefined | null, locale: 'ru' | 'he' | 'en' = 'ru'): string =>
   v ? (v[locale] || v.ru) : '';

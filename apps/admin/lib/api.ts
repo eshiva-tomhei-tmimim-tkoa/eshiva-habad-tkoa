@@ -66,4 +66,25 @@ export async function uploadFile(file: File): Promise<string> {
   return (json.data as { photoUrl: string }).photoUrl;
 }
 
+/** Загрузка видео или фото (большой лимит) для медиа-слотов → { url }. */
+export async function uploadVideo(file: File): Promise<string> {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch(`${API_URL}/admin/upload/video`, {
+    method: 'POST',
+    credentials: 'include',
+    body: form,
+  });
+  const json = await res.json().catch(() => null);
+  if (!res.ok) {
+    const err = (json?.error as ApiErrorShape) ?? { code: 'UNKNOWN', message: `HTTP ${res.status}` };
+    throw new ApiError(res.status, err);
+  }
+  return (json.data as { url: string }).url;
+}
+
 export const apiBase = API_URL;
+
+/** URL медиа в админке: внешние — как есть, /uploads/… — абсолютным к API. */
+export const mediaSrc = (url: string | null | undefined): string =>
+  !url ? '' : /^https?:\/\//i.test(url) ? url : `${API_URL.replace(/\/api$/, '')}${url}`;

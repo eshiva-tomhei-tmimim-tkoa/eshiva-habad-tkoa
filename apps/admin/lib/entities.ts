@@ -326,6 +326,7 @@ export const STANDALONE_PAGES: StandalonePage[] = [
     title: `Контент: ${g.title}`,
     href: `/content/${g.slug}`,
   })),
+  { key: 'media', title: 'Медиа сайта', href: '/media' },
   { key: 'translations', title: 'Переводы UI', href: '/translations' },
   { key: 'logs', title: 'Логи и ошибки', href: '/logs' },
 ];

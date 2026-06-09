@@ -1,7 +1,8 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { apiGet, getContent, t, cstr, assetUrl } from '@/lib/api';
+import { apiGet, getContent, getMedia, t, cstr, assetUrl } from '@/lib/api';
 import { Btn } from '@/components/Btn';
 import { ImgPlaceholder } from '@/components/PageHeader';
+import { MediaBlock } from '@/components/MediaBlock';
 import { Icon } from '@/components/Icons';
 import { Link } from '@/i18n/navigation';
 import type { TeamMember, CampaignDto } from '@/lib/dto';
@@ -15,10 +16,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: A
   const tr = await getTranslations('home');
   const study = await getTranslations('study');
 
-  const [team, campaign, content] = await Promise.all([
+  const [team, campaign, content, media] = await Promise.all([
     apiGet<TeamMember[]>('/team', []),
     apiGet<CampaignDto | null>('/campaign', null),
     getContent('home'),
+    getMedia(),
   ]);
   const pct = campaign ? Math.round((campaign.raisedAmount / campaign.goalAmount) * 100) : 0;
 
@@ -72,14 +74,20 @@ export default async function HomePage({ params }: { params: Promise<{ locale: A
               </div>
             </div>
             <div className="hero-media fade-up fade-up-4">
-              <ImgPlaceholder label={tr('heroMediaLabel')} aspect="4/5">
+              <MediaBlock
+                media={media}
+                slug="home.hero"
+                label={tr('heroMediaLabel')}
+                aspect="4/5"
+                meta={tr('heroVideoMeta')}
+              >
                 <div className="hero-media-overlay">
                   <button type="button" className="hero-play" aria-label="Видео">
                     <Icon.play />
                   </button>
                   <div className="hero-media-meta mono">{tr('heroVideoMeta')}</div>
                 </div>
-              </ImgPlaceholder>
+              </MediaBlock>
               <div className="hero-float-card">
                 <div className="hero-float-l mono">{tr('heroFloatLabel')}</div>
                 <div className="hero-float-v">{tr('heroFloatValue')}</div>
@@ -95,6 +103,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: A
           <div className="rebbe-grid">
             <div className="rebbe-portrait-wrap">
               <div className="rebbe-portrait">
+                {media['home.rebbe']?.url ? (
+                  <MediaBlock media={media} slug="home.rebbe" label={tr('rebbeName')} aspect="4/5" />
+                ) : (
+                  <>
                 <svg viewBox="0 0 400 500" className="rebbe-svg" aria-hidden>
                   <defs>
                     <linearGradient id="rb-bg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -111,6 +123,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: A
                   <path d="M 80 380 Q 80 340 140 320 Q 200 340 260 320 Q 320 340 320 380 L 320 500 L 80 500 Z" fill="var(--text)" opacity="0.85" />
                 </svg>
                 <div className="rebbe-portrait-tag mono">{tr('rebbePortraitTag')}</div>
+                  </>
+                )}
               </div>
             </div>
             <div className="rebbe-content">

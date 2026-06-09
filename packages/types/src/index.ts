@@ -131,6 +131,16 @@ export interface ContactMessage {
   createdAt: string;
 }
 
+/** Медиа-слот сайта (media_assets): фото или видео под ключом slug. */
+export interface MediaAsset {
+  slug: string;
+  kind: 'image' | 'video';
+  /** /uploads/… или внешняя ссылка (YouTube/Vimeo/mp4). */
+  url: string;
+  /** Постер для видео (опционально). */
+  poster: string | null;
+}
+
 /** Заявка на обучение (enrollment_applications). */
 export interface EnrollmentApplication {
   id: number;

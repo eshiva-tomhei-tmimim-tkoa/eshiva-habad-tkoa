@@ -235,6 +235,19 @@ model ContactMessage {
   @@map("contact_messages")
 }
 
+/// Медиа-слоты сайта (фото или видео под именованным ключом, напр. home.hero).
+/// kind: 'image' | 'video'. url — путь /uploads/… или внешняя ссылка (YouTube/Vimeo/mp4).
+model MediaAsset {
+  id        BigInt   @id @default(autoincrement())
+  slug      String   @unique @db.VarChar(64)
+  kind      String   @db.VarChar(16)
+  url       String   @db.VarChar(1024)
+  poster    String?  @db.VarChar(1024)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("media_assets")
+}
+
 /// Заявки на обучение (внутренняя анкета записи).
 model EnrollmentApplication {
   id          BigInt   @id @default(autoincrement())

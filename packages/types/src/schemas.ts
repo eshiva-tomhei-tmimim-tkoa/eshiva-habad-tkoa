@@ -69,6 +69,23 @@ export const enrollmentAdminSchema = enrollmentInputSchema.extend({
 });
 export type EnrollmentAdminInput = z.infer<typeof enrollmentAdminSchema>;
 
+/** Медиа-слот: фото или видео. */
+export const mediaKindSchema = z.enum(['image', 'video']);
+export type MediaKind = z.infer<typeof mediaKindSchema>;
+
+/** PUT /api/admin/media/:slug — задать содержимое медиа-слота. */
+export const mediaAssetInputSchema = z.object({
+  kind: mediaKindSchema,
+  url: z.string().trim().min(1).max(1024),
+  poster: z
+    .string()
+    .trim()
+    .max(1024)
+    .optional()
+    .transform((v) => (v ? v : undefined)),
+});
+export type MediaAssetInput = z.infer<typeof mediaAssetInputSchema>;
+
 /** POST /api/donations */
 export const donationInputSchema = z.object({
   campaignId: z.number().int().positive(),

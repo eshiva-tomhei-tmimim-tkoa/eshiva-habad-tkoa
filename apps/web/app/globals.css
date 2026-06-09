@@ -1740,3 +1740,42 @@ html.motion-ready .fade-up[data-motion-reveal='true'] {
     padding: 24px;
   }
 }
+
+/* ============================================================
+   МЕДИА-БЛОКИ (видео: эмбед/файл + постер)
+   ============================================================ */
+.media-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: #000;
+}
+.media-frame iframe,
+.media-frame video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  object-fit: cover;
+}
+.media-poster {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+.media-poster > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.media-poster-fallback {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--accent-soft), var(--bg-elev-2));
+}

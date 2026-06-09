@@ -247,6 +247,17 @@ publicRouter.get(
   }),
 );
 
+// GET /api/media — все медиа-слоты как { slug: { kind, url, poster } }.
+publicRouter.get(
+  '/media',
+  asyncHandler(async (_req, res) => {
+    const rows = await prisma.mediaAsset.findMany();
+    const data: Record<string, { kind: string; url: string; poster: string | null }> = {};
+    for (const r of rows) data[r.slug] = { kind: r.kind, url: r.url, poster: r.poster };
+    sendData(res, data, { count: rows.length });
+  }),
+);
+
 // GET /api/content/:group — тексты страницы как { key: Localized }.
 publicRouter.get(
   '/content/:group',
